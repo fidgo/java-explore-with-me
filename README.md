@@ -1,5 +1,5 @@
 # java-explore-with-me
-[Сcылка на PR](https://www.google.com).
+[Сcылка на PR](https://github.com/fidgo/java-explore-with-me/pull/1).
 
 ## Сервисы
 

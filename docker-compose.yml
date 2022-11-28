@@ -5,6 +5,8 @@ services:
     container_name: ewm-stats
     ports:
       - "9090:9090"
+    expose:
+      - 9090
     depends_on:
       - stats-db
     environment:
@@ -32,6 +34,8 @@ services:
     container_name: ewm-service
     ports:
       - "8080:8080"
+    expose:
+      - 8080
     depends_on:
       - ewm-db
     environment:
