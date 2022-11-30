@@ -15,7 +15,6 @@ import java.time.LocalDateTime;
 @Slf4j
 public class ErrorHandler {
 
-
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ApiError handleAlreadyExistException(final NoSuchElemException e) {
@@ -25,7 +24,7 @@ public class ErrorHandler {
                 e.getMessage(),
                 "The required object was not found.",
                 HttpStatus.NOT_FOUND,
-                LocalDateTime.now().format(DateTimeFormat.get())
+                LocalDateTime.now().format(DateTimeFormat.formatter)
         );
     }
 
@@ -38,7 +37,7 @@ public class ErrorHandler {
                 e.getMessage(),
                 "For the requested operation the conditions are not met",
                 HttpStatus.CONFLICT,
-                LocalDateTime.now().format(DateTimeFormat.get())
+                LocalDateTime.now().format(DateTimeFormat.formatter)
         );
     }
 
@@ -51,7 +50,7 @@ public class ErrorHandler {
                 e.getMessage(),
                 "For the requested operation the conditions are not met",
                 HttpStatus.FORBIDDEN,
-                LocalDateTime.now().format(DateTimeFormat.get())
+                LocalDateTime.now().format(DateTimeFormat.formatter)
         );
     }
 
@@ -65,7 +64,7 @@ public class ErrorHandler {
                 e.getMessage(),
                 "For the requested operation the conditions are not met.",
                 HttpStatus.BAD_REQUEST,
-                LocalDateTime.now().format(DateTimeFormat.get())
+                LocalDateTime.now().format(DateTimeFormat.formatter)
         );
     }
 
@@ -79,7 +78,7 @@ public class ErrorHandler {
                 e.getMessage(),
                 "For the requested operation the conditions are not met.",
                 HttpStatus.BAD_REQUEST,
-                LocalDateTime.now().format(DateTimeFormat.get())
+                LocalDateTime.now().format(DateTimeFormat.formatter)
         );
     }
 
@@ -92,7 +91,7 @@ public class ErrorHandler {
                 e.getMessage(),
                 "Error occurred",
                 HttpStatus.INTERNAL_SERVER_ERROR,
-                LocalDateTime.now().format(DateTimeFormat.get())
+                LocalDateTime.now().format(DateTimeFormat.formatter)
         );
     }
 }

@@ -28,12 +28,12 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class EventServiceImp implements EventService {
     private final EventRepository eventRepository;
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
     private final RequestRepository requestRepository;
-
     private final StatClient statClient;
 
     @Override
@@ -74,8 +74,8 @@ public class EventServiceImp implements EventService {
                     + creator.getId());
         }
 
-        State currentState = currentEvent.getState();
-        if ((currentState != State.PENDING) && (currentState != State.CANCELED)) {
+        StateEvent currentState = currentEvent.getState();
+        if ((currentState != StateEvent.PENDING) && (currentState != StateEvent.CANCELED)) {
             throw new StateElemException("Update event incorrect. Wrong State in updateable event:"
                     + currentEvent.getState());
         }
@@ -83,12 +83,10 @@ public class EventServiceImp implements EventService {
         Category newCategory = categoryRepository.findById(updateEventDto.getCategory()).orElse(null);
         updateEvent(currentEvent, updateEventDto, newCategory);
 
-        Event save = eventRepository.save(currentEvent);
-        return EventMapper.toEventFullDto(save);
+        return EventMapper.toEventFullDto(currentEvent);
     }
 
     @Override
-    @Transactional
     public List<EventFullDto> getListByPrivate(Long userId, PageRequestFrom pageRequest) {
         checkArgumentAndIfNullThrowException(userId, "userId");
 
@@ -100,7 +98,6 @@ public class EventServiceImp implements EventService {
     }
 
     @Override
-    @Transactional
     public EventFullDto getByPrivate(Long eventId, Long userId) {
         checkArgumentAndIfNullThrowException(eventId, "eventId");
         checkArgumentAndIfNullThrowException(userId, "userId");
@@ -140,27 +137,20 @@ public class EventServiceImp implements EventService {
                     + userId);
         }
 
-        State current = eventFromId.getState();
-        if (current != State.PENDING) {
+        StateEvent current = eventFromId.getState();
+        if (current != StateEvent.PENDING) {
             throw new StateElemException("Cancel event incorrect. Incorrect state:" + current + " Has to be:"
-                    + State.PENDING);
+                    + StateEvent.PENDING);
         }
 
-        eventFromId.setState(State.CANCELED);
-        Event save = eventRepository.save(eventFromId);
-
-        return EventMapper.toEventFullDto(save);
+        eventFromId.setState(StateEvent.CANCELED);
+        return EventMapper.toEventFullDto(eventFromId);
     }
 
     @Override
     @Transactional
     public EventFullDto editEventByAdmin(long eventId, AdminUpdateEventRequestDto adminUpdateEventRequestDto) {
         checkArgumentAndIfNullThrowException(eventId, "eventId");
-
-        //TODO: переписать все аннотация транзакции с методами: Там где get взять Transactional(read_only true)
-        //TODO: там, где происходит модификация в бд, то убрать save
-
-        //TODO: расположить в некотором порядке эндпоинты
 
         //TODO: дописать readme.md: добавить описания перечислимых типов, пересоздать картинку схемы, убрать лишнее
 
@@ -170,9 +160,8 @@ public class EventServiceImp implements EventService {
 
         Category newCategory = categoryRepository.findById(adminUpdateEventRequestDto.getCategory()).orElse(null);
         updateEvent(eventFromId, adminUpdateEventRequestDto, newCategory);
-        Event save = eventRepository.save(eventFromId);
 
-        return EventMapper.toEventFullDto(save);
+        return EventMapper.toEventFullDto(eventFromId);
     }
 
     @Override
@@ -184,19 +173,15 @@ public class EventServiceImp implements EventService {
                 .orElseThrow(() -> new NoSuchElemException("Event doesn't exist with id="
                         + eventId));
 
-        if (eventFromId.getState() != State.PENDING) {
+        if (eventFromId.getState() != StateEvent.PENDING) {
             throw new StateElemException("Event with id=" + eventId
-                    + " isn't in state" + State.PENDING);
+                    + " isn't in state" + StateEvent.PENDING);
         }
 
-        eventFromId.setState(State.PUBLISHED);
-        eventFromId.setPublishedOn(DateTimeFormat.getNow());
-        Event save = eventRepository.save(eventFromId);
+        eventFromId.setState(StateEvent.PUBLISHED);
+        eventFromId.setPublishedOn(LocalDateTime.now());
 
-
-        //TODO: Возможно DateTimeFormat не особо нужен, так как формат это лишь строковое представление объекта LocalDateTime
-
-        return EventMapper.toEventFullDto(save);
+        return EventMapper.toEventFullDto(eventFromId);
     }
 
     @Override
@@ -208,22 +193,18 @@ public class EventServiceImp implements EventService {
                 .orElseThrow(() -> new NoSuchElemException("Event doesn't exist with id="
                         + eventId));
 
-        if (eventFromId.getState() != State.PENDING) {
+        if (eventFromId.getState() != StateEvent.PENDING) {
             throw new StateElemException("Event with id=" + eventId
-                    + " isn't in state" + State.PENDING);
+                    + " isn't in state" + StateEvent.PENDING);
         }
 
-        eventFromId.setState(State.CANCELED);
-        Event save = eventRepository.save(eventFromId);
-
-        return EventMapper.toEventFullDto(save);
+        eventFromId.setState(StateEvent.CANCELED);
+        return EventMapper.toEventFullDto(eventFromId);
     }
 
     @Override
-    @Transactional
-    public List<EventFullDto> getListByAdmin(List<Long> users, List<State> states, List<Long> categories,
+    public List<EventFullDto> getListByAdmin(List<Long> users, List<StateEvent> states, List<Long> categories,
                                              String rangeStart, String rangeEnd, PageRequestFrom pageRequest) {
-
         Specification<Event> specification = createQuerySpecification(users, states, categories,
                 rangeStart, rangeEnd, pageRequest);
 
@@ -233,14 +214,13 @@ public class EventServiceImp implements EventService {
     }
 
     @Override
-    @Transactional
     public EventFullDto getEventByPublic(Long eventId, HttpServletRequest request) {
         checkArgumentAndIfNullThrowException(eventId, "eventId");
         statClient.saveHit(request);
 
-        Event event = eventRepository.findByIdAndState(eventId, State.PUBLISHED)
+        Event event = eventRepository.findByIdAndState(eventId, StateEvent.PUBLISHED)
                 .orElseThrow(() -> new NoSuchElemException("Event doesn't exist with id="
-                        + eventId + " and with state:" + State.PUBLISHED));
+                        + eventId + " and with state:" + StateEvent.PUBLISHED));
 
 
         EventFullDto eventFullDto = EventMapper.toEventFullDto(event);
@@ -248,34 +228,52 @@ public class EventServiceImp implements EventService {
         Map<Long, Long> views = statClient.getViewsForEvents(List.of(event), false);
         eventFullDto.setViews(views.get(eventId));
 
-        Long confirmedRequests = requestRepository.countAllByEvent_IdAndStatus(eventId, StateRequest.CONFIRMED);
+        Integer confirmedRequests = requestRepository.countAllByEvent_IdAndStatus(eventId, StateRequest.CONFIRMED);
         eventFullDto.setConfirmedRequests(confirmedRequests);
 
         return eventFullDto;
     }
 
     @Override
-    @Transactional
     public List<EventShortDto> getListByPublic(String text, List<Long> categories, Boolean paid, String rangeStart,
-                                               String rangeEnd, Boolean onlyAvailable, PageRequestFrom pageRequest, HttpServletRequest request) {
+                                               String rangeEnd, Boolean onlyAvailable, PageRequestFrom pageRequest,
+                                               HttpServletRequest request) {
         statClient.saveHit(request);
-        //TODO: переписать так, чтобы было бы меньшее число формальных параметров при передачи, если потребуется
 
         Specification<Event> specification = prepareFilterSpecification(text, categories, paid, rangeStart,
                 rangeEnd, onlyAvailable, pageRequest);
 
         List<Event> events = eventRepository.findAll(specification, pageRequest);
-        //TODO: добвить историю
+        List<EventShortDto> dtos = EventMapper.toEventShortDtos(events);
+
+        Map<Long, Long> views = statClient.getViewsForEvents(events, false);
+        dtos.forEach((dto) ->
+                {
+                    dto.setViews(views.get(dto.getId()));
+                }
+        );
+        //TODO:  количество просмотров и количество уже одобренных заявок. Не нравится, что делается это для каждого события, а не сразу считается
+
+        dtos.forEach((dto) ->
+        {
+            Integer countConfirmedRequests =
+                    requestRepository.countAllByEvent_IdAndStatus(dto.getId(), StateRequest.CONFIRMED);
+            dto.setConfirmedRequests(countConfirmedRequests);
+        });
+
         return EventMapper.toEventShortDtos(events);
     }
 
-    private Specification<Event> prepareFilterSpecification(String text, List<Long> categories, Boolean paid, String rangeStart, String rangeEnd, Boolean onlyAvailable, PageRequestFrom pageRequest) {
+    private Specification<Event> prepareFilterSpecification(String text, List<Long> categories, Boolean paid,
+                                                            String rangeStart, String rangeEnd, Boolean onlyAvailable,
+                                                            PageRequestFrom pageRequest) {
         return (root, query, builder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            predicates.add(builder.equal(root.get("state"), State.PUBLISHED));
+            predicates.add(builder.equal(root.get("state"), StateEvent.PUBLISHED));
             if (text != null && !text.isEmpty()) {
-                predicates.add(builder.or(builder.like(builder.lower(root.get("annotation")), "%" + text.toLowerCase() + "%"),
+                predicates.add(builder.or(builder.like(builder.lower(root.get("annotation")),
+                                "%" + text.toLowerCase() + "%"),
                         builder.like(builder.lower(root.get("description")), "%" + text.toLowerCase() + "%")));
             }
             if (categories != null) {
@@ -285,8 +283,10 @@ public class EventServiceImp implements EventService {
                 predicates.add(builder.equal(root.get("paid"), paid));
             }
             if ((rangeStart != null && rangeEnd != null)) {
-                predicates.add(builder.greaterThan(root.get("eventDate"), LocalDateTime.parse(rangeStart, DateTimeFormat.get())));
-                predicates.add(builder.lessThan(root.get("eventDate"), LocalDateTime.parse(rangeEnd, DateTimeFormat.get())));
+                predicates.add(builder.greaterThan(root.get("eventDate"), LocalDateTime.parse(rangeStart,
+                        DateTimeFormat.formatter)));
+                predicates.add(builder.lessThan(root.get("eventDate"), LocalDateTime.parse(rangeEnd,
+                        DateTimeFormat.formatter)));
             }
             if (onlyAvailable) {
                 predicates.add(builder.or(builder.equal(root.get("participantLimit"), 0),
@@ -298,13 +298,7 @@ public class EventServiceImp implements EventService {
         };
     }
 
-    private Map<Long, Long> getViews(List<Long> eventId) {
-        Map<Long, Long> views = new HashMap<>();
-
-        return views;
-    }
-
-    private Specification<Event> createQuerySpecification(List<Long> users, List<State> states, List<Long> categories, String rangeStart, String rangeEnd, PageRequestFrom pageRequest) {
+    private Specification<Event> createQuerySpecification(List<Long> users, List<StateEvent> states, List<Long> categories, String rangeStart, String rangeEnd, PageRequestFrom pageRequest) {
         return (root, query, builder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -319,15 +313,16 @@ public class EventServiceImp implements EventService {
             }
             if ((rangeStart != null && rangeEnd != null)) {
                 predicates.add(builder.greaterThan(root.get("eventDate"),
-                        LocalDateTime.parse(rangeStart, DateTimeFormat.get())));
+                        LocalDateTime.parse(rangeStart, DateTimeFormat.formatter)));
                 predicates.add(builder.lessThan(root.get("eventDate"),
-                        LocalDateTime.parse(rangeEnd, DateTimeFormat.get())));
+                        LocalDateTime.parse(rangeEnd, DateTimeFormat.formatter)));
             }
             return builder.and(predicates.toArray(new Predicate[0]));
         };
     }
 
-    private void updateEvent(Event eventFromId, AdminUpdateEventRequestDto adminUpdateEventRequestDto, Category newCategory) {
+    private void updateEvent(Event eventFromId, AdminUpdateEventRequestDto adminUpdateEventRequestDto,
+                             Category newCategory) {
         if (adminUpdateEventRequestDto.getAnnotation() != null) {
             eventFromId.setAnnotation(adminUpdateEventRequestDto.getAnnotation());
         }
@@ -341,7 +336,8 @@ public class EventServiceImp implements EventService {
         }
 
         if (adminUpdateEventRequestDto.getEventDate() != null) {
-            eventFromId.setEventDate(LocalDateTime.parse(adminUpdateEventRequestDto.getEventDate(), DateTimeFormat.get()));
+            eventFromId.setEventDate(LocalDateTime.parse(adminUpdateEventRequestDto.getEventDate(),
+                    DateTimeFormat.formatter));
         }
 
         if (adminUpdateEventRequestDto.getLocation() != null) {
@@ -363,7 +359,6 @@ public class EventServiceImp implements EventService {
     }
 
     private void updateEvent(Event currentEvent, UpdateEventRequestDto updateEventDto, Category newCategory) {
-
         if (updateEventDto.getAnnotation() != null) {
             currentEvent.setAnnotation(updateEventDto.getAnnotation());
         }
@@ -392,7 +387,7 @@ public class EventServiceImp implements EventService {
             currentEvent.setTitle(updateEventDto.getTitle());
         }
 
-        currentEvent.setState(State.PENDING);
+        currentEvent.setState(StateEvent.PENDING);
     }
 
     private void checkArgumentAndIfNullThrowException(Object variable, String title) {

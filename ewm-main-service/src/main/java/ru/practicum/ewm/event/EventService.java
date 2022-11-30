@@ -23,7 +23,7 @@ public interface EventService {
 
     EventFullDto rejectByAdmin(Long eventId);
 
-    List<EventFullDto> getListByAdmin(List<Long> users, List<State> states, List<Long> categories, String rangeStart,
+    List<EventFullDto> getListByAdmin(List<Long> users, List<StateEvent> states, List<Long> categories, String rangeStart,
                                       String rangeEnd, PageRequestFrom pageRequest);
 
     EventFullDto getEventByPublic(Long eventId, HttpServletRequest request);

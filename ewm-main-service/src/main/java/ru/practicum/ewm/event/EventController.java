@@ -52,6 +52,65 @@ public class EventController {
         return eventService.updateByPrivate(updateEventDto, userId);
     }
 
+    @PatchMapping("/users/{userId}/events/{eventId}")
+    EventFullDto cancelByPrivate(@PathVariable Long eventId,
+                                 @PathVariable Long userId,
+                                 HttpServletRequest request) {
+
+        log.info("{}:{}:{}#To cancel event by user:{} and event:{}",
+                this.getClass().getSimpleName(),
+                "cancelByPrivate",
+                request.getRequestURI(),
+                userId,
+                eventId
+        );
+
+        return eventService.cancelByPrivate(eventId, userId);
+    }
+
+    @PatchMapping("/admin/events/{eventId}/publish")
+    EventFullDto publishByAdmin(@PathVariable("eventId") Long eventId, HttpServletRequest request) {
+
+        log.info("{}:{}:{}#To publish event:{}",
+                this.getClass().getSimpleName(),
+                "publishByAdmin",
+                request.getRequestURI(),
+                eventId
+        );
+
+        return eventService.publishByAdmin(eventId);
+    }
+
+    @PatchMapping("/admin/events/{eventId}/reject")
+    EventFullDto rejectByAdmin(@PathVariable("eventId") Long eventId, HttpServletRequest request) {
+
+        log.info("{}:{}:{}#To reject event:{}",
+                this.getClass().getSimpleName(),
+                "rejectByAdmin",
+                request.getRequestURI(),
+                eventId
+        );
+
+        return eventService.rejectByAdmin(eventId);
+    }
+
+    @PutMapping(path = "/admin/events/{eventId}")
+    public EventFullDto editEventByAdmin(@PathVariable(value = "eventId") long eventId,
+                                         @Validated({Update.class}) @RequestBody AdminUpdateEventRequestDto adminUpdateEventRequestDto,
+                                         HttpServletRequest request) {
+
+        log.info("{}:{}:{}#To edit event:{} with {}",
+                this.getClass().getSimpleName(),
+                "editEventByAdmin",
+                request.getRequestURI(),
+                eventId,
+                adminUpdateEventRequestDto
+        );
+
+        return eventService.editEventByAdmin(eventId, adminUpdateEventRequestDto);
+    }
+
+
     @GetMapping("/users/{userId}/events")
     List<EventFullDto> getListByPrivate(@PathVariable(value = "userId") Long userId,
                                         @RequestParam(name = "from", defaultValue = "0") Integer from,
@@ -86,26 +145,10 @@ public class EventController {
         return eventService.getByPrivate(eventId, userId);
     }
 
-    @PatchMapping("/users/{userId}/events/{eventId}")
-    EventFullDto cancelByPrivate(@PathVariable Long eventId,
-                                 @PathVariable Long userId,
-                                 HttpServletRequest request) {
-
-        log.info("{}:{}:{}#To cancel event by user:{} and event:{}",
-                this.getClass().getSimpleName(),
-                "cancelByPrivate",
-                request.getRequestURI(),
-                userId,
-                eventId
-        );
-
-        return eventService.cancelByPrivate(eventId, userId);
-    }
-
     @GetMapping("/admin/events")
     public List<EventFullDto> getListByAdmin(
             @RequestParam(required = false) List<Long> users,
-            @RequestParam(required = false) List<State> states,
+            @RequestParam(required = false) List<StateEvent> states,
             @RequestParam(required = false) List<Long> categories,
             @RequestParam(required = false) String rangeStart,
             @RequestParam(required = false) String rangeEnd,
@@ -131,49 +174,6 @@ public class EventController {
         final PageRequestFrom pageRequest = new PageRequestFrom(size, from, Sort.unsorted());
 
         return eventService.getListByAdmin(users, states, categories, rangeStart, rangeEnd, pageRequest);
-    }
-
-    @PutMapping(path = "/admin/events/{eventId}")
-    public EventFullDto editEventByAdmin(@PathVariable(value = "eventId") long eventId,
-                                         @Validated({Update.class}) @RequestBody AdminUpdateEventRequestDto adminUpdateEventRequestDto,
-                                         HttpServletRequest request) {
-
-        //TODO: почему то не работает, ругается что нет request body
-        log.info("{}:{}:{}#To edit event:{} with {}",
-                this.getClass().getSimpleName(),
-                "editEventByAdmin",
-                request.getRequestURI(),
-                eventId,
-                adminUpdateEventRequestDto
-        );
-
-        return eventService.editEventByAdmin(eventId, adminUpdateEventRequestDto);
-    }
-
-    @PatchMapping("/admin/events/{eventId}/publish")
-    EventFullDto publishByAdmin(@PathVariable("eventId") Long eventId, HttpServletRequest request) {
-
-        log.info("{}:{}:{}#To publish event:{}",
-                this.getClass().getSimpleName(),
-                "publishByAdmin",
-                request.getRequestURI(),
-                eventId
-        );
-
-        return eventService.publishByAdmin(eventId);
-    }
-
-    @PatchMapping("/admin/events/{eventId}/reject")
-    EventFullDto rejectByAdmin(@PathVariable("eventId") Long eventId, HttpServletRequest request) {
-
-        log.info("{}:{}:{}#To reject event:{}",
-                this.getClass().getSimpleName(),
-                "rejectByAdmin",
-                request.getRequestURI(),
-                eventId
-        );
-
-        return eventService.rejectByAdmin(eventId);
     }
 
     @GetMapping("/events/{id}")

@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class CategoryServiceImp implements CategoryService {
     private final CategoryRepository categoryRepository;
     private final EventRepository eventRepository;
@@ -48,7 +49,6 @@ public class CategoryServiceImp implements CategoryService {
     }
 
     @Override
-    @Transactional
     public List<CategoryDto> getListByPublic(PageRequestFrom pageRequest) {
         List<Category> categories = categoryRepository
                 .findAll(pageRequest)
@@ -59,7 +59,6 @@ public class CategoryServiceImp implements CategoryService {
     }
 
     @Override
-    @Transactional
     public CategoryDto getByPublic(Long catId) {
         checkArgumentAndIfNullThrowException(catId, "catId");
 
@@ -77,7 +76,6 @@ public class CategoryServiceImp implements CategoryService {
         Category categoryFromId = categoryRepository.findById(catId)
                 .orElseThrow(() -> new NoSuchElemException("Category doesn't exist with id=" + catId));
 
-        //TODO: проверка на наличии связу удаляемой категории с каким либо событием
         if (eventRepository.existsByCategory_Id(categoryFromId.getId())) {
             throw new AlreadyExistException("Unable to delete category! Category:"
                     + categoryFromId + "connect with event");

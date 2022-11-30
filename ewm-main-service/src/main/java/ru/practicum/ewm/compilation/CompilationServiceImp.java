@@ -80,12 +80,11 @@ public class CompilationServiceImp implements CompilationService {
                         + eventId));
 
         compilationFromId.getEvents().add(eventFromId);
-
-        Compilation save = compilationRepository.save(compilationFromId);
-        return CompilationMapper.toCompilationDto(save);
+        return CompilationMapper.toCompilationDto(compilationFromId);
     }
 
     @Override
+    @Transactional
     public CompilationDto deleteEventByAdmin(Long compId, Long eventId) {
         checkArgumentAndIfNullThrowException(compId, "compId");
         checkArgumentAndIfNullThrowException(eventId, "eventId");
@@ -105,9 +104,7 @@ public class CompilationServiceImp implements CompilationService {
         }
 
         compilationFromId.getEvents().remove(eventFromId);
-
-        Compilation save = compilationRepository.save(compilationFromId);
-        return CompilationMapper.toCompilationDto(save);
+        return CompilationMapper.toCompilationDto(compilationFromId);
     }
 
     @Override
@@ -123,8 +120,7 @@ public class CompilationServiceImp implements CompilationService {
             compilationFromId.setPinned(true);
         }
 
-        Compilation save = compilationRepository.save(compilationFromId);
-        return CompilationMapper.toCompilationDto(save);
+        return CompilationMapper.toCompilationDto(compilationFromId);
     }
 
     @Override

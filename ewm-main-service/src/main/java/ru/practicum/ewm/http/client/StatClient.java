@@ -16,12 +16,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class StatClient {
     private final BaseClient baseClient;
-
     private static final String BASE_URI_EVENT_VIEW = "/events/{%d}";
 
     public void saveHit(HttpServletRequest request) {
         EndPointHit send =
-                new EndPointHit("ewm-main-service", request.getRequestURI(), request.getRemoteAddr(), LocalDateTime.now());
+                new EndPointHit("ewm-main-service", request.getRequestURI(), request.getRemoteAddr(),
+                        LocalDateTime.now());
         baseClient.hit(send);
     }
 

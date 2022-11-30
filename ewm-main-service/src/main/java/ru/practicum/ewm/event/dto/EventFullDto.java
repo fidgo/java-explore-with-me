@@ -1,7 +1,7 @@
 package ru.practicum.ewm.event.dto;
 
 import lombok.*;
-import ru.practicum.ewm.event.State;
+import ru.practicum.ewm.event.StateEvent;
 
 @Getter
 @Setter
@@ -9,11 +9,12 @@ import ru.practicum.ewm.event.State;
 @NoArgsConstructor
 @ToString
 public class EventFullDto {
+
     private String annotation;
 
     private CategoryDto category;
 
-    private Long confirmedRequests;
+    private Integer confirmedRequests;
 
     private String createdOn;
 
@@ -35,7 +36,7 @@ public class EventFullDto {
 
     private Boolean requestModeration;
 
-    private State state;
+    private StateEvent state;
 
     private String title;
 

@@ -12,7 +12,7 @@ public class RequestMapper {
         dto.setId(save.getId());
         dto.setRequester(save.getRequester().getId());
         dto.setEvent(save.getEvent().getId());
-        dto.setCreated(save.getCreated().format(DateTimeFormat.get()));
+        dto.setCreated(save.getCreated().format(DateTimeFormat.formatter));
         dto.setStatus(save.getStatus());
         return dto;
     }

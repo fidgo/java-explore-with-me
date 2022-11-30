@@ -23,7 +23,7 @@ public class ErrorHandler {
                 e.getMessage(),
                 "Error occurred",
                 HttpStatus.INTERNAL_SERVER_ERROR,
-                LocalDateTime.now().format(DateTimeFormat.get())
+                LocalDateTime.now().format(DateTimeFormat.formatter)
         );
     }
 }

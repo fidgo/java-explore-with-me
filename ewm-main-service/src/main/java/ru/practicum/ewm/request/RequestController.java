@@ -45,37 +45,6 @@ public class RequestController {
         return requestService.cancelByPrivate(userId, requestId);
     }
 
-    @GetMapping("/users/{userId}/requests")
-    List<ParticipationRequestDto> getListByPrivate(@PathVariable Long userId,
-                                                   HttpServletRequest request) {
-
-        log.info("{}:{}:{}#To get all user:{} request",
-                this.getClass().getSimpleName(),
-                "getListByPrivate",
-                request.getRequestURI(),
-                userId
-        );
-
-        return requestService.getListByPrivate(userId);
-    }
-
-
-    @GetMapping("/users/{userId}/events/{eventId}/requests")
-    List<ParticipationRequestDto> getListToEventFromCreatorByPrivate(@PathVariable Long userId,
-                                                                     @PathVariable Long eventId,
-                                                                     HttpServletRequest request) {
-
-        log.info("{}:{}:{}#To get all request to event:{} by creator:{} request",
-                this.getClass().getSimpleName(),
-                "getListToEventFromCreatorByPrivate",
-                request.getRequestURI(),
-                eventId,
-                userId
-        );
-
-        return requestService.getListToEventFromCreatorByPrivate(userId, eventId);
-    }
-
     @PatchMapping(path = "/users/{userId}/events/{eventId}/requests/{reqId}/reject")
     public ParticipationRequestDto rejectByPrivate(@PathVariable(value = "userId") long userId,
                                                    @PathVariable(value = "eventId") long eventId,
@@ -110,6 +79,36 @@ public class RequestController {
         );
 
         return requestService.confirmByPrivate(userId, eventId, requestId);
+    }
+
+    @GetMapping("/users/{userId}/events/{eventId}/requests")
+    List<ParticipationRequestDto> getListToEventFromCreatorByPrivate(@PathVariable Long userId,
+                                                                     @PathVariable Long eventId,
+                                                                     HttpServletRequest request) {
+
+        log.info("{}:{}:{}#To get all request to event:{} by creator:{} request",
+                this.getClass().getSimpleName(),
+                "getListToEventFromCreatorByPrivate",
+                request.getRequestURI(),
+                eventId,
+                userId
+        );
+
+        return requestService.getListToEventFromCreatorByPrivate(userId, eventId);
+    }
+
+    @GetMapping("/users/{userId}/requests")
+    List<ParticipationRequestDto> getListByPrivate(@PathVariable Long userId,
+                                                   HttpServletRequest request) {
+
+        log.info("{}:{}:{}#To get all user:{} request",
+                this.getClass().getSimpleName(),
+                "getListByPrivate",
+                request.getRequestURI(),
+                userId
+        );
+
+        return requestService.getListByPrivate(userId);
     }
 
 }

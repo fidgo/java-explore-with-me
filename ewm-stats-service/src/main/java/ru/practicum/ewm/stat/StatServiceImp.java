@@ -31,8 +31,8 @@ public class StatServiceImp implements StatService {
     @Transactional
     public List<ViewStats> get(String start, String end, Set<String> uris, Boolean unique) {
         List<ViewStats> viewStats;
-        LocalDateTime startTime = LocalDateTime.parse(decode(start), DateTimeFormat.get());
-        LocalDateTime endTime = LocalDateTime.parse(decode(end), DateTimeFormat.get());
+        LocalDateTime startTime = LocalDateTime.parse(decode(start), DateTimeFormat.formatter);
+        LocalDateTime endTime = LocalDateTime.parse(decode(end), DateTimeFormat.formatter);
 
         if (unique) {
             viewStats = getUnique(uris, startTime, endTime);

@@ -14,6 +14,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class UserServiceImp implements UserService {
     private final UserRepository userRepository;
 
@@ -25,17 +26,16 @@ public class UserServiceImp implements UserService {
                     + " or ematl=" + newUserRequestDto.getEmail() + " already exist");
         }
 
-        User fromDto = UserMapper.toUser(newUserRequestDto);
-        User save = userRepository.save(fromDto);
+        User inputUser = UserMapper.toUser(newUserRequestDto);
+        User save = userRepository.save(inputUser);
         return UserMapper.toUserDto(save);
     }
 
     @Override
-    @Transactional
     public List<UserDto> getByAdmin(List<Long> ids, PageRequestFrom pageRequest) {
         checkArgumentAndIfNullThrowException(ids, "ids");
-        List<User> usersFromID = userRepository.findAllByIdIn(ids, pageRequest);
-        return UserMapper.toListUserDto(usersFromID);
+        List<User> inputUsers = userRepository.findAllByIdIn(ids, pageRequest);
+        return UserMapper.toListUserDto(inputUsers);
     }
 
     @Override

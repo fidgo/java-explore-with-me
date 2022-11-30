@@ -8,17 +8,19 @@ import ru.practicum.ewm.error.NoSuchElemException;
 import ru.practicum.ewm.error.StateElemException;
 import ru.practicum.ewm.event.Event;
 import ru.practicum.ewm.event.EventRepository;
-import ru.practicum.ewm.event.State;
+import ru.practicum.ewm.event.StateEvent;
 import ru.practicum.ewm.request.dto.ParticipationRequestDto;
 import ru.practicum.ewm.request.dto.RequestMapper;
 import ru.practicum.ewm.user.User;
 import ru.practicum.ewm.user.UserRepository;
 import ru.practicum.ewm.util.DateTimeFormat;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class RequestServiceImp implements RequestService {
 
     private final RequestRepository requestRepository;
@@ -31,18 +33,18 @@ public class RequestServiceImp implements RequestService {
         checkArgumentAndIfNullThrowException(eventId, "eventId");
         checkArgumentAndIfNullThrowException(userId, "userId");
 
-        User requester = userRepository.findById(userId)
+        User inputUser = userRepository.findById(userId)
                 .orElseThrow(() -> new NoSuchElemException("User doesn't exist with id=" + userId));
 
-        Event eventFromId = eventRepository.findById(eventId)
+        Event inputEvent = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NoSuchElemException("Event doesn't exist with id="
                         + eventId));
 
-        if (eventFromId.getState() != State.PUBLISHED) {
+        if (inputEvent.getState() != StateEvent.PUBLISHED) {
             throw new StateElemException("Can't attend unpublished event!");
         }
 
-        if (eventFromId.getCreator().equals(requester)) {
+        if (inputEvent.getCreator().equals(inputUser)) {
             throw new StateElemException("Event creator can't be requester!");
         }
 
@@ -51,15 +53,22 @@ public class RequestServiceImp implements RequestService {
                     + " and userId=" + userId + "already in requestBD!");
         }
 
-        //TODO: если у события достигнут лимит запросов на участие - необходимо вернуть ошибку
-
-        Request request = new Request(0L, eventFromId, requester, DateTimeFormat.getNow(),
+        Request newRequest = new Request(0L, inputEvent, inputUser, LocalDateTime.now(),
                 StateRequest.PENDING);
-        if (!(eventFromId.getRequestModeration())) {
-            request.setStatus(StateRequest.CONFIRMED);
+        if (!(inputEvent.getRequestModeration())) {
+            newRequest.setStatus(StateRequest.CONFIRMED);
         }
 
-        Request save = requestRepository.save(request);
+        Integer participantLimit = inputEvent.getParticipantLimit();
+        Integer confirmed =
+                requestRepository.countAllByEvent_IdAndStatus(eventId, StateRequest.CONFIRMED);
+        int remainingSpace = participantLimit - confirmed;
+
+        if (remainingSpace <= 0) {
+            newRequest.setStatus(StateRequest.REJECTED);
+        }
+
+        Request save = requestRepository.save(newRequest);
         return RequestMapper.toParticipationRequestDto(save);
     }
 
@@ -73,22 +82,19 @@ public class RequestServiceImp implements RequestService {
         userRepository.findById(userId)
                 .orElseThrow(() -> new NoSuchElemException("User doesn't exist with id=" + userId));
 
-        Request request = requestRepository.findById(requestId)
+        Request inputRequest = requestRepository.findById(requestId)
                 .orElseThrow(() -> new NoSuchElemException("Request doesn't exist with id=" + requestId));
 
-        if (request.getRequester().getId().longValue() != userId) {
+        if (inputRequest.getRequester().getId().longValue() != userId) {
             throw new StateElemException("Request(id=" + requestId + " doesn't belong to user(id="
                     + userId + ")!");
         }
 
-        request.setStatus(StateRequest.CANCELED);
-
-        Request save = requestRepository.save(request);
-        return RequestMapper.toParticipationRequestDto(save);
+        inputRequest.setStatus(StateRequest.CANCELED);
+        return RequestMapper.toParticipationRequestDto(inputRequest);
     }
 
     @Override
-    @Transactional
     public List<ParticipationRequestDto> getListByPrivate(Long userId) {
         checkArgumentAndIfNullThrowException(userId, "userId");
 
@@ -100,7 +106,6 @@ public class RequestServiceImp implements RequestService {
     }
 
     @Override
-    @Transactional
     public List<ParticipationRequestDto> getListToEventFromCreatorByPrivate(Long userId, Long eventId) {
         checkArgumentAndIfNullThrowException(userId, "userId");
         checkArgumentAndIfNullThrowException(eventId, "eventId");
@@ -108,11 +113,11 @@ public class RequestServiceImp implements RequestService {
         userRepository.findById(userId)
                 .orElseThrow(() -> new NoSuchElemException("User doesn't exist with id=" + userId));
 
-        Event event = eventRepository.findById(eventId)
+        Event inputEvent = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NoSuchElemException("Event doesn't exist with id="
                         + eventId));
 
-        if (event.getCreator().getId().longValue() != userId) {
+        if (inputEvent.getCreator().getId().longValue() != userId) {
             throw new StateElemException("Event(id=" + eventId + " doesn't belong to user(id="
                     + userId + ")!");
         }
@@ -131,41 +136,40 @@ public class RequestServiceImp implements RequestService {
         userRepository.findById(userId)
                 .orElseThrow(() -> new NoSuchElemException("User doesn't exist with id=" + userId));
 
-        Event event = eventRepository.findById(eventId)
+        Event inputEvent = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NoSuchElemException("Event doesn't exist with id="
                         + eventId));
 
-        Request request = requestRepository.findById(requestId)
+        Request inputRequest = requestRepository.findById(requestId)
                 .orElseThrow(() -> new NoSuchElemException("Request doesn't exist with id=" + requestId));
 
-        if ((event.getParticipantLimit() == 0) || !(event.getRequestModeration())) {
+        if ((inputEvent.getParticipantLimit() == 0) || !(inputEvent.getRequestModeration())) {
             throw new StateElemException("Event doesn't need an approve");
         }
 
-        List<Request> approved
+        List<Request> approvedRequests
                 = requestRepository.findAllByEvent_IdAndRequester_IdAndStatus(eventId, requestId,
                 StateRequest.CONFIRMED);
-        int participantLeft = event.getParticipantLimit() - approved.size();
+        int participantLeft = inputEvent.getParticipantLimit() - approvedRequests.size();
 
         if (participantLeft <= 0) {
             throw new StateElemException("Reached limit participant on event");
         }
 
-        request.setStatus(StateRequest.CONFIRMED);
-        Request save = requestRepository.save(request);
+        inputRequest.setStatus(StateRequest.CONFIRMED);
 
         if (participantLeft == 1) {
-            List<Request> pendingLeft =
+            List<Request> pendingRequests =
                     requestRepository.findAllByEvent_IdAndRequester_IdAndStatus(eventId, requestId,
                             StateRequest.PENDING);
-            pendingLeft
-                    .forEach((req -> {
-                        req.setStatus(StateRequest.CANCELED);
-                        requestRepository.save(req);
-                    }));
+            pendingRequests.forEach((req ->
+            {
+                req.setStatus(StateRequest.CANCELED);
+            }
+            ));
         }
 
-        return RequestMapper.toParticipationRequestDto(save);
+        return RequestMapper.toParticipationRequestDto(inputRequest);
     }
 
     @Override
@@ -178,23 +182,21 @@ public class RequestServiceImp implements RequestService {
         userRepository.findById(userId)
                 .orElseThrow(() -> new NoSuchElemException("User doesn't exist with id=" + userId));
 
-        Event event = eventRepository.findById(eventId)
+        eventRepository.findById(eventId)
                 .orElseThrow(() -> new NoSuchElemException("Event doesn't exist with id="
                         + eventId));
 
-        Request request = requestRepository.findById(requestId)
+        Request inputRequest = requestRepository.findById(requestId)
                 .orElseThrow(() -> new NoSuchElemException("Request doesn't exist with id=" + requestId));
 
-        request.setStatus(StateRequest.REJECTED);
-        Request save = requestRepository.save(request);
-        return RequestMapper.toParticipationRequestDto(save);
+        inputRequest.setStatus(StateRequest.REJECTED);
+        return RequestMapper.toParticipationRequestDto(inputRequest);
     }
 
     private void checkArgumentAndIfNullThrowException(Object variable, String title) {
         if (variable == null) {
             throw new IlLegalArgumentException(title + "is null");
         }
-
     }
 
 }

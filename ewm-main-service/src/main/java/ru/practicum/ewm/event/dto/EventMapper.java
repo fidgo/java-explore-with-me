@@ -3,11 +3,12 @@ package ru.practicum.ewm.event.dto;
 import ru.practicum.ewm.category.Category;
 import ru.practicum.ewm.category.dto.CategoryMapper;
 import ru.practicum.ewm.event.Event;
-import ru.practicum.ewm.event.State;
+import ru.practicum.ewm.event.StateEvent;
 import ru.practicum.ewm.user.User;
 import ru.practicum.ewm.user.dto.UserMapper;
 import ru.practicum.ewm.util.DateTimeFormat;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -22,9 +23,9 @@ public class EventMapper {
         event.setDescription(newEventDto.getDescription());
         event.setAnnotation(newEventDto.getAnnotation());
         event.setTitle(newEventDto.getTitle());
-        event.setState(State.PENDING);
+        event.setState(StateEvent.PENDING);
         event.setEventDate(newEventDto.getEventDate());
-        event.setDateCreate(DateTimeFormat.getNow());
+        event.setDateCreate(LocalDateTime.now());
         event.setLat(newEventDto.getLocation().getLat());
         event.setLon(newEventDto.getLocation().getLon());
         event.setParticipantLimit(newEventDto.getParticipantLimit());
@@ -43,11 +44,11 @@ public class EventMapper {
         eventFullDto.getCategory().setName(event.getCategory().getName());
 
         //TODO: дописать confirmedRequests - Количество одобренных заявок на участие в данном событии
-        eventFullDto.setConfirmedRequests(0L);
+        eventFullDto.setConfirmedRequests(0);
 
-        eventFullDto.setCreatedOn(event.getDateCreate().format(DateTimeFormat.get()));
+        eventFullDto.setCreatedOn(event.getDateCreate().format(DateTimeFormat.formatter));
         eventFullDto.setDescription(event.getDescription());
-        eventFullDto.setEventDate(event.getEventDate().format(DateTimeFormat.get()));
+        eventFullDto.setEventDate(event.getEventDate().format(DateTimeFormat.formatter));
         eventFullDto.setId(event.getId());
 
         eventFullDto.setInitiator(new EventFullDto.UserShortDto());
@@ -81,17 +82,12 @@ public class EventMapper {
             eventShortDto.setCategory(CategoryMapper.toCategoryDto(event.getCategory()));
         }
 
-
-        //TODO: confirmerd request у каждого event должен быть подсчитан
-        //eventShortDto.setConfirmedRequests(event.);
         eventShortDto.setId(event.getId());
         eventShortDto.setInitiator(UserMapper.toUserShortDto(event.getCreator()));
         eventShortDto.setPaid(event.getPaid());
         eventShortDto.setTitle(event.getTitle());
-        eventShortDto.setEventDate(event.getEventDate().format(DateTimeFormat.get()));
+        eventShortDto.setEventDate(event.getEventDate().format(DateTimeFormat.formatter));
 
-        //TODO: добавить учет views
-        //eventShortDto.setViews(event.);
         return eventShortDto;
     }
 

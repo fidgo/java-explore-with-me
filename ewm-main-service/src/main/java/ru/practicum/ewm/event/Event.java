@@ -39,7 +39,7 @@ public class Event {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "state")
-    private State state;
+    private StateEvent state;
 
     @Column(name = "event_date")
     private LocalDateTime eventDate;
