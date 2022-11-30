@@ -265,7 +265,7 @@ public class EventServiceImp implements EventService {
                 rangeEnd, onlyAvailable, pageRequest);
 
         List<Event> events = eventRepository.findAll(specification, pageRequest);
-
+        //TODO: добвить историю
         return EventMapper.toEventShortDtos(events);
     }
 

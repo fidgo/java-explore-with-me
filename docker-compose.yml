@@ -23,7 +23,7 @@ services:
     expose:
       - 5433
     volumes:
-      - /var/lib/postgresql/data/
+      - vol-stats-db:/var/lib/postgresql/data/
     environment:
       - POSTGRES_DB=ewm-stats
       - POSTGRES_USER=root
@@ -55,10 +55,14 @@ services:
     expose:
       - 5434
     volumes:
-      - /var/lib/postgresql/data/
+      - vol-ewm-db:/var/lib/postgresql/data/
     environment:
       - POSTGRES_DB=main
       - POSTGRES_USER=root
       - POSTGRES_PASSWORD=root
     command:
       -p 5434
+
+volumes:
+  vol-ewm-db:
+  vol-stats-db:
