@@ -51,6 +51,7 @@ CREATE TABLE IF NOT EXISTS events
     state              VARCHAR(256),
     event_date         TIMESTAMP WITHOUT TIME ZONE,
     date_create        TIMESTAMP WITHOUT TIME ZONE             NOT NULL,
+    published_on       TIMESTAMP WITHOUT TIME ZONE,
     lat                float4,
     lon                float4,
     participant_limit  INTEGER,

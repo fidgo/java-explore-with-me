@@ -13,7 +13,7 @@ public class EventFullDto {
 
     private CategoryDto category;
 
-    private Integer confirmedRequests;
+    private Long confirmedRequests;
 
     private String createdOn;
 

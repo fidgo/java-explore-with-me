@@ -43,6 +43,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://ewm_service_db:5434/main
       - POSTGRES_USER=root
       - POSTGRES_PASSWORD=root
+      - STATSERV_URL=http://ewm-stats:9090
     command:
       - p 8080
 

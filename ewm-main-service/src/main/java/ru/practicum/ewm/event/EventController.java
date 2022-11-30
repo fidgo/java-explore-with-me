@@ -3,18 +3,19 @@ package ru.practicum.ewm.event;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.ewm.event.dto.AdminUpdateEventRequestDto;
-import ru.practicum.ewm.event.dto.EventFullDto;
-import ru.practicum.ewm.event.dto.NewEventDto;
-import ru.practicum.ewm.event.dto.UpdateEventRequestDto;
+import ru.practicum.ewm.event.dto.*;
 import ru.practicum.ewm.util.Create;
 import ru.practicum.ewm.util.PageRequestFrom;
 import ru.practicum.ewm.util.Update;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
 
 @RestController()
@@ -103,6 +104,37 @@ public class EventController {
         return eventService.cancelByPrivate(eventId, userId);
     }
 
+    @GetMapping("/admin/events")
+    public List<EventFullDto> getListByAdmin(
+            @RequestParam(required = false) List<Long> users,
+            @RequestParam(required = false) List<State> states,
+            @RequestParam(required = false) List<Long> categories,
+            @RequestParam(required = false) String rangeStart,
+            @RequestParam(required = false) String rangeEnd,
+            @PositiveOrZero @RequestParam(name = "from", required = false, defaultValue = "0") Integer from,
+            @Positive @RequestParam(name = "size", required = false, defaultValue = "10") Integer size,
+            HttpServletRequest request
+    ) {
+
+        log.info("{}:{}:{}#To get event by users:{}, states:{}, categories:{}, rangeStart:{}, rangeEnd:{}, from:{}" +
+                        " and size:{}",
+                this.getClass().getSimpleName(),
+                "getListByAdmin",
+                request.getRequestURI(),
+                users,
+                states,
+                categories,
+                rangeStart,
+                rangeEnd,
+                from,
+                size
+        );
+
+        final PageRequestFrom pageRequest = new PageRequestFrom(size, from, Sort.unsorted());
+
+        return eventService.getListByAdmin(users, states, categories, rangeStart, rangeEnd, pageRequest);
+    }
+
     @PutMapping(path = "/admin/events/{eventId}")
     public EventFullDto editEventByAdmin(@PathVariable(value = "eventId") long eventId,
                                          @Validated({Update.class}) @RequestBody AdminUpdateEventRequestDto adminUpdateEventRequestDto,
@@ -145,4 +177,53 @@ public class EventController {
 
         return eventService.rejectByAdmin(eventId);
     }
+
+    @GetMapping("/events/{id}")
+    EventFullDto getEventByPublic(@PathVariable("id") Long eventId, HttpServletRequest request) {
+
+        log.info("{}:{}:{}#To get event:{}",
+                this.getClass().getSimpleName(),
+                "getEventByPublic",
+                request.getRequestURI(),
+                eventId
+        );
+
+        return eventService.getEventByPublic(eventId, request);
+    }
+
+    @GetMapping("/events")
+    public List<EventShortDto> getListByPublic(@RequestParam(required = false) String text,
+                                               @RequestParam(required = false) List<Long> categories,
+                                               @RequestParam(required = false) Boolean paid,
+                                               @RequestParam(required = false) String rangeStart,
+                                               @RequestParam(required = false) String rangeEnd,
+                                               @RequestParam(required = false, defaultValue = "false") Boolean onlyAvailable,
+                                               @RequestParam(required = false, defaultValue = "") String sort,
+                                               @PositiveOrZero @RequestParam(name = "from", required = false, defaultValue = "0") Integer from,
+                                               @Positive @RequestParam(name = "size", required = false, defaultValue = "10") Integer size,
+                                               HttpServletRequest request) {
+
+        log.info("{}:{}:{}#To get events by text:{}, by categories:{}, by paid:{}, by rangeStart:{}, by rangeEnd:{}, " +
+                        " by onlyAvailable:{}, by sort:{}, from:{}, size:{}",
+                this.getClass().getSimpleName(), "getListByPublic", request.getRequestURI(), text, categories,
+                paid, rangeStart, rangeEnd, onlyAvailable, sort, from, size
+        );
+
+
+        Sort sorting = null;
+        switch (sort) {
+            case "EVENT_DATE":
+                sorting = Sort.by(Sort.Direction.DESC, "eventDate");
+                break;
+            case "VIEWS":
+                sorting = Sort.by(Sort.Direction.DESC, "views");
+                break;
+            default:
+                sorting = Sort.by(Sort.Direction.ASC, "id");
+        }
+        final PageRequestFrom pageRequest = new PageRequestFrom(size, from, sorting);
+
+        return eventService.getListByPublic(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, pageRequest, request);
+    }
+
 }

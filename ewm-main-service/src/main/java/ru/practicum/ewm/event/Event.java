@@ -44,6 +44,9 @@ public class Event {
     @Column(name = "event_date")
     private LocalDateTime eventDate;
 
+    @Column(name = "published_on")
+    private LocalDateTime publishedOn;
+
     @Column(name = "date_create", nullable = false)
     private LocalDateTime dateCreate;
 

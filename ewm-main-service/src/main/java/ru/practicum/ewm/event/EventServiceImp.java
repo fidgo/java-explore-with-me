@@ -1,6 +1,7 @@
 package ru.practicum.ewm.event;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.category.Category;
@@ -9,23 +10,34 @@ import ru.practicum.ewm.error.IlLegalArgumentException;
 import ru.practicum.ewm.error.NoSuchElemException;
 import ru.practicum.ewm.error.StateElemException;
 import ru.practicum.ewm.event.dto.*;
+import ru.practicum.ewm.http.client.StatClient;
+import ru.practicum.ewm.request.RequestRepository;
+import ru.practicum.ewm.request.StateRequest;
 import ru.practicum.ewm.user.User;
 import ru.practicum.ewm.user.UserRepository;
 import ru.practicum.ewm.util.DateTimeFormat;
 import ru.practicum.ewm.util.PageRequestFrom;
 
+import javax.persistence.criteria.Predicate;
+import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class EventServiceImp implements EventService {
     private final EventRepository eventRepository;
     private final CategoryRepository categoryRepository;
-
     private final UserRepository userRepository;
+    private final RequestRepository requestRepository;
+
+    private final StatClient statClient;
 
     @Override
+    @Transactional
     public EventFullDto createByPrivate(NewEventDto newEventDto, Long userId) {
         checkArgumentAndIfNullThrowException(userId, "userId");
 
@@ -145,6 +157,13 @@ public class EventServiceImp implements EventService {
     public EventFullDto editEventByAdmin(long eventId, AdminUpdateEventRequestDto adminUpdateEventRequestDto) {
         checkArgumentAndIfNullThrowException(eventId, "eventId");
 
+        //TODO: переписать все аннотация транзакции с методами: Там где get взять Transactional(read_only true)
+        //TODO: там, где происходит модификация в бд, то убрать save
+
+        //TODO: расположить в некотором порядке эндпоинты
+
+        //TODO: дописать readme.md: добавить описания перечислимых типов, пересоздать картинку схемы, убрать лишнее
+
         Event eventFromId = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NoSuchElemException("Event doesn't exist with id="
                         + eventId));
@@ -157,6 +176,7 @@ public class EventServiceImp implements EventService {
     }
 
     @Override
+    @Transactional
     public EventFullDto publishByAdmin(Long eventId) {
         checkArgumentAndIfNullThrowException(eventId, "eventId");
 
@@ -170,12 +190,17 @@ public class EventServiceImp implements EventService {
         }
 
         eventFromId.setState(State.PUBLISHED);
+        eventFromId.setPublishedOn(DateTimeFormat.getNow());
         Event save = eventRepository.save(eventFromId);
+
+
+        //TODO: Возможно DateTimeFormat не особо нужен, так как формат это лишь строковое представление объекта LocalDateTime
 
         return EventMapper.toEventFullDto(save);
     }
 
     @Override
+    @Transactional
     public EventFullDto rejectByAdmin(Long eventId) {
         checkArgumentAndIfNullThrowException(eventId, "eventId");
 
@@ -192,6 +217,114 @@ public class EventServiceImp implements EventService {
         Event save = eventRepository.save(eventFromId);
 
         return EventMapper.toEventFullDto(save);
+    }
+
+    @Override
+    @Transactional
+    public List<EventFullDto> getListByAdmin(List<Long> users, List<State> states, List<Long> categories,
+                                             String rangeStart, String rangeEnd, PageRequestFrom pageRequest) {
+
+        Specification<Event> specification = createQuerySpecification(users, states, categories,
+                rangeStart, rangeEnd, pageRequest);
+
+        List<Event> events = eventRepository.findAll(specification, pageRequest);
+
+        return EventMapper.toEventFullDtos(events);
+    }
+
+    @Override
+    @Transactional
+    public EventFullDto getEventByPublic(Long eventId, HttpServletRequest request) {
+        checkArgumentAndIfNullThrowException(eventId, "eventId");
+        statClient.saveHit(request);
+
+        Event event = eventRepository.findByIdAndState(eventId, State.PUBLISHED)
+                .orElseThrow(() -> new NoSuchElemException("Event doesn't exist with id="
+                        + eventId + " and with state:" + State.PUBLISHED));
+
+
+        EventFullDto eventFullDto = EventMapper.toEventFullDto(event);
+
+        Map<Long, Long> views = statClient.getViewsForEvents(List.of(event), false);
+        eventFullDto.setViews(views.get(eventId));
+
+        Long confirmedRequests = requestRepository.countAllByEvent_IdAndStatus(eventId, StateRequest.CONFIRMED);
+        eventFullDto.setConfirmedRequests(confirmedRequests);
+
+        return eventFullDto;
+    }
+
+    @Override
+    @Transactional
+    public List<EventShortDto> getListByPublic(String text, List<Long> categories, Boolean paid, String rangeStart,
+                                               String rangeEnd, Boolean onlyAvailable, PageRequestFrom pageRequest, HttpServletRequest request) {
+        statClient.saveHit(request);
+        //TODO: переписать так, чтобы было бы меньшее число формальных параметров при передачи, если потребуется
+
+        Specification<Event> specification = prepareFilterSpecification(text, categories, paid, rangeStart,
+                rangeEnd, onlyAvailable, pageRequest);
+
+        List<Event> events = eventRepository.findAll(specification,pageRequest);
+
+        return EventMapper.toEventShortDtos(events);
+    }
+
+    private Specification<Event> prepareFilterSpecification(String text, List<Long> categories, Boolean paid, String rangeStart, String rangeEnd, Boolean onlyAvailable, PageRequestFrom pageRequest) {
+        return (root, query, builder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            predicates.add(builder.equal(root.get("state"), State.PUBLISHED));
+            if (text != null && !text.isEmpty()) {
+                predicates.add(builder.or(builder.like(builder.lower(root.get("annotation")), "%" + text.toLowerCase() + "%"),
+                        builder.like(builder.lower(root.get("description")), "%" + text.toLowerCase() + "%")));
+            }
+            if (categories != null) {
+                predicates.add(builder.and(root.get("category").in(categories)));
+            }
+            if (paid != null) {
+                predicates.add(builder.equal(root.get("paid"), paid));
+            }
+            if ((rangeStart != null && rangeEnd != null)) {
+                predicates.add(builder.greaterThan(root.get("eventDate"), LocalDateTime.parse(rangeStart,  DateTimeFormat.get())));
+                predicates.add(builder.lessThan(root.get("eventDate"), LocalDateTime.parse(rangeEnd, DateTimeFormat.get())));
+            }
+            if (onlyAvailable) {
+                predicates.add(builder.or(builder.equal(root.get("participantLimit"), 0),
+                        builder.and(builder.notEqual(root.get("participantLimit"), 0),
+                                builder.greaterThan(root.get("participantLimit"), root.get("confirmedRequests")))));
+            }
+
+            return builder.and(predicates.toArray(new Predicate[0]));
+        };
+    }
+
+    private Map<Long, Long> getViews(List<Long> eventId) {
+        Map<Long, Long> views = new HashMap<>();
+
+        return views;
+    }
+
+    private Specification<Event> createQuerySpecification(List<Long> users, List<State> states, List<Long> categories, String rangeStart, String rangeEnd, PageRequestFrom pageRequest) {
+        return (root, query, builder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (users != null && !users.isEmpty()) {
+                predicates.add(builder.and(root.get("creator").in(users)));
+            }
+            if (states != null && !states.isEmpty()) {
+                predicates.add(builder.and(root.get("state").in(states)));
+            }
+            if (categories != null && !categories.isEmpty()) {
+                predicates.add(builder.and(root.get("category").in(categories)));
+            }
+            if ((rangeStart != null && rangeEnd != null)) {
+                predicates.add(builder.greaterThan(root.get("eventDate"),
+                        LocalDateTime.parse(rangeStart, DateTimeFormat.get())));
+                predicates.add(builder.lessThan(root.get("eventDate"),
+                        LocalDateTime.parse(rangeEnd, DateTimeFormat.get())));
+            }
+            return builder.and(predicates.toArray(new Predicate[0]));
+        };
     }
 
     private void updateEvent(Event eventFromId, AdminUpdateEventRequestDto adminUpdateEventRequestDto, Category newCategory) {

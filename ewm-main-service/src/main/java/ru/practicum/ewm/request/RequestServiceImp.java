@@ -56,7 +56,7 @@ public class RequestServiceImp implements RequestService {
         Request request = new Request(0L, eventFromId, requester, DateTimeFormat.getNow(),
                 StateRequest.PENDING);
         if (!(eventFromId.getRequestModeration())) {
-            request.setStatus(StateRequest.ACCEPTED);
+            request.setStatus(StateRequest.CONFIRMED);
         }
 
         Request save = requestRepository.save(request);

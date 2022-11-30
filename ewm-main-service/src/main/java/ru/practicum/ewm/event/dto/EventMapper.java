@@ -43,7 +43,7 @@ public class EventMapper {
         eventFullDto.getCategory().setName(event.getCategory().getName());
 
         //TODO: дописать confirmedRequests - Количество одобренных заявок на участие в данном событии
-        eventFullDto.setConfirmedRequests(0);
+        eventFullDto.setConfirmedRequests(0L);
 
         eventFullDto.setCreatedOn(event.getDateCreate().format(DateTimeFormat.get()));
         eventFullDto.setDescription(event.getDescription());
@@ -58,9 +58,9 @@ public class EventMapper {
         eventFullDto.getLocation().setLat(event.getLat());
         eventFullDto.getLocation().setLon(event.getLon());
 
-        //TODO: дописать publishedOn, views
+        //TODO: дописать views
 
-
+        eventFullDto.setPublishedOn(eventFullDto.getPublishedOn());
         eventFullDto.setPaid(event.getPaid());
         eventFullDto.setParticipantLimit(event.getParticipantLimit());
         eventFullDto.setRequestModeration(event.getRequestModeration());
@@ -88,6 +88,7 @@ public class EventMapper {
         eventShortDto.setInitiator(UserMapper.toUserShortDto(event.getCreator()));
         eventShortDto.setPaid(event.getPaid());
         eventShortDto.setTitle(event.getTitle());
+        eventShortDto.setEventDate(event.getEventDate().format(DateTimeFormat.get()));
 
         //TODO: добавить учет views
         //eventShortDto.setViews(event.);
@@ -96,5 +97,9 @@ public class EventMapper {
 
     public static Set<EventShortDto> toNewEventDtoSet(Set<Event> events) {
         return events.stream().map(EventMapper::toEventShortDto).collect(Collectors.toSet());
+    }
+
+    public static List<EventShortDto> toEventShortDtos(List<Event> events) {
+        return events.stream().map(EventMapper::toEventShortDto).collect(Collectors.toList());
     }
 }

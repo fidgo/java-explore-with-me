@@ -40,7 +40,6 @@ public class CompilationServiceImp implements CompilationService {
     @Override
     @Transactional
     public List<CompilationDto> getListByPublic(Boolean pinned, PageRequestFrom pageRequest) {
-        checkArgumentAndIfNullThrowException(pinned, "pinned");
         List<Compilation> compilations = null;
 
         if (pinned != null) {
@@ -48,6 +47,8 @@ public class CompilationServiceImp implements CompilationService {
         } else {
             compilations = compilationRepository.findAll();
         }
+
+        //TODO:решить стоит ли делать тесты или нет
 
         return CompilationMapper.toCompilationDtos(compilations);
     }
@@ -154,7 +155,7 @@ public class CompilationServiceImp implements CompilationService {
 
     private void checkArgumentAndIfNullThrowException(Object variable, String title) {
         if (variable == null) {
-            throw new IlLegalArgumentException(title + "is null");
+            throw new IlLegalArgumentException(title + " is null");
         }
     }
 }

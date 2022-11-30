@@ -1,11 +1,9 @@
 package ru.practicum.ewm.event;
 
-import ru.practicum.ewm.event.dto.AdminUpdateEventRequestDto;
-import ru.practicum.ewm.event.dto.EventFullDto;
-import ru.practicum.ewm.event.dto.NewEventDto;
-import ru.practicum.ewm.event.dto.UpdateEventRequestDto;
+import ru.practicum.ewm.event.dto.*;
 import ru.practicum.ewm.util.PageRequestFrom;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 public interface EventService {
@@ -25,4 +23,12 @@ public interface EventService {
 
     EventFullDto rejectByAdmin(Long eventId);
 
+    List<EventFullDto> getListByAdmin(List<Long> users, List<State> states, List<Long> categories, String rangeStart,
+                                      String rangeEnd, PageRequestFrom pageRequest);
+
+    EventFullDto getEventByPublic(Long eventId, HttpServletRequest request);
+
+    List<EventShortDto> getListByPublic(String text, List<Long> categories, Boolean paid, String rangeStart,
+                                        String rangeEnd, Boolean onlyAvailable, PageRequestFrom pageRequest,
+                                        HttpServletRequest request);
 }
