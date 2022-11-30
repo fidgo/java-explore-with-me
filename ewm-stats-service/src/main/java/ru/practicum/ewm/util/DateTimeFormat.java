@@ -1,6 +1,5 @@
 package ru.practicum.ewm.util;
 
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class DateTimeFormat {

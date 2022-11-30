@@ -1,18 +1,13 @@
 package ru.practicum.ewm.http.client;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
-import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpStatusCodeException;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.List;
-import java.util.Map;
+
 @Service
 public class BaseClient {
 
@@ -36,7 +31,7 @@ public class BaseClient {
     }
 
     public List<ViewStats> get(String start, String end,
-                                List<String> uris, Boolean unique) {
+                               List<String> uris, Boolean unique) {
         return webClient
                 .get()
                 .uri(uriBuilder -> uriBuilder

@@ -264,7 +264,7 @@ public class EventServiceImp implements EventService {
         Specification<Event> specification = prepareFilterSpecification(text, categories, paid, rangeStart,
                 rangeEnd, onlyAvailable, pageRequest);
 
-        List<Event> events = eventRepository.findAll(specification,pageRequest);
+        List<Event> events = eventRepository.findAll(specification, pageRequest);
 
         return EventMapper.toEventShortDtos(events);
     }
@@ -285,7 +285,7 @@ public class EventServiceImp implements EventService {
                 predicates.add(builder.equal(root.get("paid"), paid));
             }
             if ((rangeStart != null && rangeEnd != null)) {
-                predicates.add(builder.greaterThan(root.get("eventDate"), LocalDateTime.parse(rangeStart,  DateTimeFormat.get())));
+                predicates.add(builder.greaterThan(root.get("eventDate"), LocalDateTime.parse(rangeStart, DateTimeFormat.get())));
                 predicates.add(builder.lessThan(root.get("eventDate"), LocalDateTime.parse(rangeEnd, DateTimeFormat.get())));
             }
             if (onlyAvailable) {

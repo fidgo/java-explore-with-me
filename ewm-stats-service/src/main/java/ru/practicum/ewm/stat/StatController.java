@@ -23,16 +23,16 @@ public class StatController {
                 "StatController",
                 "hit",
                 endpointHit
-                );
+        );
 
         return statService.hit(endpointHit);
     }
 
     @GetMapping("/stats")
     public List<ViewStats> get(@RequestParam String start,
-                                    @RequestParam String end,
-                                    @RequestParam Set<String> uris,
-                                    @RequestParam(required = false, defaultValue = "false") Boolean unique) {
+                               @RequestParam String end,
+                               @RequestParam Set<String> uris,
+                               @RequestParam(required = false, defaultValue = "false") Boolean unique) {
 
         log.info("{}:{}: start:{}, end:{}, urls:{}, unique:{}",
                 "StatController",

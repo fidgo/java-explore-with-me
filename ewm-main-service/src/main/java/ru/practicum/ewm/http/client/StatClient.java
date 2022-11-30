@@ -21,7 +21,7 @@ public class StatClient {
 
     public void saveHit(HttpServletRequest request) {
         EndPointHit send =
-                new EndPointHit("ewm-main-service", request.getRequestURI(),request.getRemoteAddr(), LocalDateTime.now());
+                new EndPointHit("ewm-main-service", request.getRequestURI(), request.getRemoteAddr(), LocalDateTime.now());
         baseClient.hit(send);
     }
 
@@ -42,6 +42,7 @@ public class StatClient {
         viewStats.forEach(viewStat -> eventViews.put(getIdFromUri(viewStat.getUri()), viewStat.getHits()));
         return eventViews;
     }
+
     private List<String> getUris(List<Event> events) {
         return events.stream()
                 .map(event -> String.format(BASE_URI_EVENT_VIEW, event.getId()))

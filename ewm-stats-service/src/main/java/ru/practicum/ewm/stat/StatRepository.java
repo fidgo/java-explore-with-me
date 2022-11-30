@@ -8,5 +8,6 @@ import java.time.LocalDateTime;
 @Repository
 public interface StatRepository extends JpaRepository<Stat, Long> {
     int countByUriAndTimestampIsBetween(String uri, LocalDateTime start, LocalDateTime end);
+
     int countDistinctByUriAndTimestampIsBetween(String uri, LocalDateTime start, LocalDateTime end);
 }
