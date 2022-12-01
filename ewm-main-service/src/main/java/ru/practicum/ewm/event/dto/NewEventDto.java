@@ -16,7 +16,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @ToString
 public class NewEventDto {
-
     @NotNull(groups = {Create.class})
     @Size(min = 20, max = 2000, groups = {Create.class})
     private String annotation;

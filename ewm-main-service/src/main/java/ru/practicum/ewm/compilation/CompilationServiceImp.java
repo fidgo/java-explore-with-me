@@ -26,14 +26,13 @@ public class CompilationServiceImp implements CompilationService {
     @Override
     @Transactional
     public CompilationDto createByAdmin(NewCompilationDto newCompilationDto) {
-
         Set<Event> eventsFromDto = newCompilationDto.getEvents().stream()
                 .map((id) -> eventRepository.findById(id)
                         .orElseThrow(() -> new NoSuchElemException("Event doesn't exist with id=" + id)))
                 .collect(Collectors.toSet());
 
-        Compilation compilation = CompilationMapper.toCompilation(newCompilationDto, eventsFromDto);
-        Compilation save = compilationRepository.save(compilation);
+        Compilation inputCompilation = CompilationMapper.toCompilation(newCompilationDto, eventsFromDto);
+        Compilation save = compilationRepository.save(inputCompilation);
         return CompilationMapper.toCompilationDto(save);
     }
 
@@ -48,8 +47,6 @@ public class CompilationServiceImp implements CompilationService {
             compilations = compilationRepository.findAll();
         }
 
-        //TODO:решить стоит ли делать тесты или нет
-
         return CompilationMapper.toCompilationDtos(compilations);
     }
 
@@ -58,11 +55,11 @@ public class CompilationServiceImp implements CompilationService {
     public CompilationDto getByPublic(Long compId) {
         checkArgumentAndIfNullThrowException(compId, "compId");
 
-        Compilation compilationFromId = compilationRepository.findById(compId)
+        Compilation compilationById = compilationRepository.findById(compId)
                 .orElseThrow(() -> new NoSuchElemException("Compilation doesn't exist with id="
                         + compId));
 
-        return CompilationMapper.toCompilationDto(compilationFromId);
+        return CompilationMapper.toCompilationDto(compilationById);
     }
 
     @Override
@@ -71,16 +68,16 @@ public class CompilationServiceImp implements CompilationService {
         checkArgumentAndIfNullThrowException(compId, "compId");
         checkArgumentAndIfNullThrowException(eventId, "eventId");
 
-        Compilation compilationFromId = compilationRepository.findById(compId)
+        Compilation compilationById = compilationRepository.findById(compId)
                 .orElseThrow(() -> new NoSuchElemException("Compilation doesn't exist with id="
                         + compId));
 
-        Event eventFromId = eventRepository.findById(eventId)
+        Event eventById = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NoSuchElemException("Event doesn't exist with id="
                         + eventId));
 
-        compilationFromId.getEvents().add(eventFromId);
-        return CompilationMapper.toCompilationDto(compilationFromId);
+        compilationById.getEvents().add(eventById);
+        return CompilationMapper.toCompilationDto(compilationById);
     }
 
     @Override
@@ -89,22 +86,22 @@ public class CompilationServiceImp implements CompilationService {
         checkArgumentAndIfNullThrowException(compId, "compId");
         checkArgumentAndIfNullThrowException(eventId, "eventId");
 
-        Compilation compilationFromId = compilationRepository.findById(compId)
+        Compilation compilationById = compilationRepository.findById(compId)
                 .orElseThrow(() -> new NoSuchElemException("Compilation doesn't exist with id="
                         + compId));
 
-        Event eventFromId = eventRepository.findById(eventId)
+        Event eventById = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NoSuchElemException("Event doesn't exist with id="
                         + eventId));
 
-        if (!(compilationFromId.getEvents().contains(eventFromId))) {
-            throw new StateElemException("Compiltaion(id=" + compilationFromId.getId()
-                    + ")  doesn't contain event(id=" + eventFromId.getId()
+        if (!(compilationById.getEvents().contains(eventById))) {
+            throw new StateElemException("Compiltaion(id=" + compilationById.getId()
+                    + ")  doesn't contain event(id=" + eventById.getId()
                     + ")");
         }
 
-        compilationFromId.getEvents().remove(eventFromId);
-        return CompilationMapper.toCompilationDto(compilationFromId);
+        compilationById.getEvents().remove(eventById);
+        return CompilationMapper.toCompilationDto(compilationById);
     }
 
     @Override
@@ -112,15 +109,15 @@ public class CompilationServiceImp implements CompilationService {
     public CompilationDto addPinByAdmin(Long compId) {
         checkArgumentAndIfNullThrowException(compId, "compId");
 
-        Compilation compilationFromId = compilationRepository.findById(compId)
+        Compilation compilationById = compilationRepository.findById(compId)
                 .orElseThrow(() -> new NoSuchElemException("Compilation doesn't exist with id="
                         + compId));
 
-        if (compilationFromId.getPinned() != null) {
-            compilationFromId.setPinned(true);
+        if (compilationById.getPinned() != null) {
+            compilationById.setPinned(true);
         }
 
-        return CompilationMapper.toCompilationDto(compilationFromId);
+        return CompilationMapper.toCompilationDto(compilationById);
     }
 
     @Override
@@ -128,12 +125,12 @@ public class CompilationServiceImp implements CompilationService {
     public void deletePinByAdmin(Long compId) {
         checkArgumentAndIfNullThrowException(compId, "compId");
 
-        Compilation compilationFromId = compilationRepository.findById(compId)
+        Compilation compilationById = compilationRepository.findById(compId)
                 .orElseThrow(() -> new NoSuchElemException("Compilation doesn't exist with id="
                         + compId));
 
-        if (compilationFromId.getPinned() != null) {
-            compilationFromId.setPinned(false);
+        if (compilationById.getPinned() != null) {
+            compilationById.setPinned(false);
         }
     }
 

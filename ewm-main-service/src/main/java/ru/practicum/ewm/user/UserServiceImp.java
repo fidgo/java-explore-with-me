@@ -34,8 +34,8 @@ public class UserServiceImp implements UserService {
     @Override
     public List<UserDto> getByAdmin(List<Long> ids, PageRequestFrom pageRequest) {
         checkArgumentAndIfNullThrowException(ids, "ids");
-        List<User> inputUsers = userRepository.findAllByIdIn(ids, pageRequest);
-        return UserMapper.toListUserDto(inputUsers);
+        List<User> usersByIds = userRepository.findAllByIdIn(ids, pageRequest);
+        return UserMapper.toListUserDto(usersByIds);
     }
 
     @Override

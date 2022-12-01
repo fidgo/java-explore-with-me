@@ -12,7 +12,6 @@ import java.util.Set;
 @NoArgsConstructor
 @ToString
 public class CompilationDto {
-
     private Long id;
 
     private Boolean pinned;

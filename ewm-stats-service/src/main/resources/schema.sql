@@ -1,6 +1,6 @@
 DROP TABLE IF EXISTS statistics CASCADE;
 
-create sequence statistics_id_seq;
+--create sequence statistics_id_seq;
 
 CREATE TABLE IF NOT EXISTS statistics
 (

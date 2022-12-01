@@ -14,6 +14,7 @@ import javax.validation.constraints.NotEmpty;
 public class NewUserRequestDto {
     @NotEmpty(groups = {Create.class})
     private String name;
+
     @NotEmpty(groups = {Create.class})
     @Email(groups = {Create.class})
     private String email;

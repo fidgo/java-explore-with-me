@@ -19,7 +19,6 @@ public class RequestController {
     ParticipationRequestDto createByPrivate(@PathVariable(value = "userId") Long userId,
                                             @RequestParam(name = "eventId", required = false) Long eventId,
                                             HttpServletRequest request) {
-
         log.info("{}:{}:{}#To create user:{} request on event:{}",
                 this.getClass().getSimpleName(),
                 "createByPrivate",
@@ -34,7 +33,6 @@ public class RequestController {
     public ParticipationRequestDto cancelByPrivate(@PathVariable Long userId,
                                                    @PathVariable Long requestId,
                                                    HttpServletRequest request) {
-
         log.info("{}:{}:{}#To cancel user:{} request:{}",
                 this.getClass().getSimpleName(),
                 "cancelByPrivate",
@@ -50,7 +48,6 @@ public class RequestController {
                                                    @PathVariable(value = "eventId") long eventId,
                                                    @PathVariable(value = "reqId") long requestId,
                                                    HttpServletRequest request) {
-
         log.info("{}:{}:{}#To reject request:{} to event:{} by creator:{} request",
                 this.getClass().getSimpleName(),
                 "rejectByPrivate",
@@ -68,7 +65,6 @@ public class RequestController {
                                                     @PathVariable(value = "eventId") long eventId,
                                                     @PathVariable(value = "reqId") long requestId,
                                                     HttpServletRequest request) {
-
         log.info("{}:{}:{}#To confirm request:{} to event:{} by creator:{} request",
                 this.getClass().getSimpleName(),
                 "confirmByPrivate",
@@ -100,7 +96,6 @@ public class RequestController {
     @GetMapping("/users/{userId}/requests")
     List<ParticipationRequestDto> getListByPrivate(@PathVariable Long userId,
                                                    HttpServletRequest request) {
-
         log.info("{}:{}:{}#To get all user:{} request",
                 this.getClass().getSimpleName(),
                 "getListByPrivate",

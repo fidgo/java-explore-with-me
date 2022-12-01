@@ -12,5 +12,4 @@ public interface UserService {
     List<UserDto> getByAdmin(List<Long> ids, PageRequestFrom pageRequest);
 
     void deleteByAdmin(Long userId);
-
 }

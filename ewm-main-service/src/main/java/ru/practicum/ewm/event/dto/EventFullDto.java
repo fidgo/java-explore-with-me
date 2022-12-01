@@ -9,7 +9,6 @@ import ru.practicum.ewm.event.StateEvent;
 @NoArgsConstructor
 @ToString
 public class EventFullDto {
-
     private String annotation;
 
     private CategoryDto category;

@@ -22,7 +22,6 @@ public class UserController {
     @PostMapping("/admin/users")
     UserDto createByAdmin(@Validated({Create.class}) @RequestBody NewUserRequestDto newUserRequestDto,
                           HttpServletRequest request) {
-
         log.info("{}:{}:{}#To create new user from:{}",
                 this.getClass().getSimpleName(),
                 "createByAdmin",
@@ -37,7 +36,6 @@ public class UserController {
                              @RequestParam(name = "from", defaultValue = "0") Integer from,
                              @RequestParam(name = "size", defaultValue = "10") Integer size,
                              HttpServletRequest request) {
-
         log.info("{}:{}:{}#To get users with ids={}, from={}, size={}",
                 this.getClass().getSimpleName(),
                 "getByAdmin",
@@ -53,7 +51,6 @@ public class UserController {
     @DeleteMapping("/admin/users/{userId}")
     void deleteByAdmin(@PathVariable("userId") Long userId,
                        HttpServletRequest request) {
-
         log.info("{}:{}:{}#To delete user with id={}",
                 this.getClass().getSimpleName(),
                 "deleteByAdmin",

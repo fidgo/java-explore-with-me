@@ -18,7 +18,6 @@ public class StatController {
 
     @PostMapping("/hit")
     public EndPointHit hit(@RequestBody EndPointHit endpointHit) {
-
         log.info("{}:{}:EndPointHit:{}",
                 "StatController",
                 "hit",
@@ -33,7 +32,6 @@ public class StatController {
                                @RequestParam String end,
                                @RequestParam Set<String> uris,
                                @RequestParam(required = false, defaultValue = "false") Boolean unique) {
-
         log.info("{}:{}: start:{}, end:{}, urls:{}, unique:{}",
                 "StatController",
                 "get",

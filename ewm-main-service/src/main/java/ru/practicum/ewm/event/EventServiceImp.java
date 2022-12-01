@@ -22,7 +22,6 @@ import javax.persistence.criteria.Predicate;
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -41,17 +40,17 @@ public class EventServiceImp implements EventService {
     public EventFullDto createByPrivate(NewEventDto newEventDto, Long userId) {
         checkArgumentAndIfNullThrowException(userId, "userId");
 
-        Category categoryFromDto = null;
+        Category inputCategory = null;
         if (newEventDto.getCategory() != null) {
             Long catId = newEventDto.getCategory();
-            categoryFromDto = categoryRepository.findById(catId)
+            inputCategory = categoryRepository.findById(catId)
                     .orElseThrow(() -> new NoSuchElemException("Category doesn't exist with id=" + catId));
         }
 
-        User creator = userRepository.findById(userId)
+        User userById = userRepository.findById(userId)
                 .orElseThrow(() -> new NoSuchElemException("User doesn't exist with id=" + userId));
-        Event fromDto = EventMapper.toEvent(newEventDto, categoryFromDto, creator);
-        Event save = eventRepository.save(fromDto);
+        Event inputEvent = EventMapper.toEvent(newEventDto, inputCategory, userById);
+        Event save = eventRepository.save(inputEvent);
 
         return EventMapper.toEventFullDto(save);
     }
@@ -61,29 +60,29 @@ public class EventServiceImp implements EventService {
     public EventFullDto updateByPrivate(UpdateEventRequestDto updateEventDto, Long userId) {
         checkArgumentAndIfNullThrowException(userId, "userId");
 
-        User creator = userRepository.findById(userId)
+        User userById = userRepository.findById(userId)
                 .orElseThrow(() -> new NoSuchElemException("User doesn't exist with id=" + userId));
 
-        Event currentEvent = eventRepository.findById(updateEventDto.getEventId())
+        Event eventById = eventRepository.findById(updateEventDto.getEventId())
                 .orElseThrow(() -> new NoSuchElemException("Event doesn't exist with id="
                         + updateEventDto.getEventId()));
 
-        if (currentEvent.getCreator().getId().longValue() != creator.getId().longValue()) {
-            throw new StateElemException("Update event incorrect. Current event with id=" + currentEvent.getId()
-                    + " created by user=" + currentEvent.getCreator().getId() + " isn't created by user with id="
-                    + creator.getId());
+        if (eventById.getCreator().getId().longValue() != userById.getId().longValue()) {
+            throw new StateElemException("Update event incorrect. Current event with id=" + eventById.getId()
+                    + " created by user=" + eventById.getCreator().getId() + " isn't created by user with id="
+                    + userById.getId());
         }
 
-        StateEvent currentState = currentEvent.getState();
+        StateEvent currentState = eventById.getState();
         if ((currentState != StateEvent.PENDING) && (currentState != StateEvent.CANCELED)) {
             throw new StateElemException("Update event incorrect. Wrong State in updateable event:"
-                    + currentEvent.getState());
+                    + eventById.getState());
         }
 
         Category newCategory = categoryRepository.findById(updateEventDto.getCategory()).orElse(null);
-        updateEvent(currentEvent, updateEventDto, newCategory);
+        updateEvent(eventById, updateEventDto, newCategory);
 
-        return EventMapper.toEventFullDto(currentEvent);
+        return EventMapper.toEventFullDto(eventById);
     }
 
     @Override
@@ -93,8 +92,8 @@ public class EventServiceImp implements EventService {
         userRepository.findById(userId)
                 .orElseThrow(() -> new NoSuchElemException("User doesn't exist with id=" + userId));
 
-        List<Event> events = eventRepository.findAllByCreator_Id(userId, pageRequest);
-        return EventMapper.toEventFullDtos(events);
+        List<Event> eventsFromCreator = eventRepository.findAllByCreator_Id(userId, pageRequest);
+        return EventMapper.toEventFullDtos(eventsFromCreator);
     }
 
     @Override
@@ -105,17 +104,17 @@ public class EventServiceImp implements EventService {
         userRepository.findById(userId)
                 .orElseThrow(() -> new NoSuchElemException("User doesn't exist with id=" + userId));
 
-        Event eventFromId = eventRepository.findById(eventId)
+        Event eventById = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NoSuchElemException("Event doesn't exist with id="
                         + eventId));
 
-        if (eventFromId.getCreator().getId().longValue() != userId.longValue()) {
-            throw new StateElemException("Getting event incorrect. Current event with id=" + eventFromId.getId()
-                    + " created by user=" + eventFromId.getCreator().getId() + " isn't created by user with id="
+        if (eventById.getCreator().getId().longValue() != userId.longValue()) {
+            throw new StateElemException("Getting event incorrect. Current event with id=" + eventById.getId()
+                    + " created by user=" + eventById.getCreator().getId() + " isn't created by user with id="
                     + userId);
         }
 
-        return EventMapper.toEventFullDto(eventFromId);
+        return EventMapper.toEventFullDto(eventById);
     }
 
     @Override
@@ -127,24 +126,24 @@ public class EventServiceImp implements EventService {
         userRepository.findById(userId)
                 .orElseThrow(() -> new NoSuchElemException("User doesn't exist with id=" + userId));
 
-        Event eventFromId = eventRepository.findById(eventId)
+        Event eventById = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NoSuchElemException("Event doesn't exist with id="
                         + eventId));
 
-        if (eventFromId.getCreator().getId().longValue() != userId.longValue()) {
-            throw new StateElemException("Cancel event incorrect. Current event with id=" + eventFromId.getId()
-                    + " created by user=" + eventFromId.getCreator().getId() + " isn't created by user with id="
+        if (eventById.getCreator().getId().longValue() != userId.longValue()) {
+            throw new StateElemException("Cancel event incorrect. Current event with id=" + eventById.getId()
+                    + " created by user=" + eventById.getCreator().getId() + " isn't created by user with id="
                     + userId);
         }
 
-        StateEvent current = eventFromId.getState();
+        StateEvent current = eventById.getState();
         if (current != StateEvent.PENDING) {
             throw new StateElemException("Cancel event incorrect. Incorrect state:" + current + " Has to be:"
                     + StateEvent.PENDING);
         }
 
-        eventFromId.setState(StateEvent.CANCELED);
-        return EventMapper.toEventFullDto(eventFromId);
+        eventById.setState(StateEvent.CANCELED);
+        return EventMapper.toEventFullDto(eventById);
     }
 
     @Override
@@ -152,16 +151,14 @@ public class EventServiceImp implements EventService {
     public EventFullDto editEventByAdmin(long eventId, AdminUpdateEventRequestDto adminUpdateEventRequestDto) {
         checkArgumentAndIfNullThrowException(eventId, "eventId");
 
-        //TODO: дописать readme.md: добавить описания перечислимых типов, пересоздать картинку схемы, убрать лишнее
-
-        Event eventFromId = eventRepository.findById(eventId)
+        Event eventById = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NoSuchElemException("Event doesn't exist with id="
                         + eventId));
 
         Category newCategory = categoryRepository.findById(adminUpdateEventRequestDto.getCategory()).orElse(null);
-        updateEvent(eventFromId, adminUpdateEventRequestDto, newCategory);
+        updateEvent(eventById, adminUpdateEventRequestDto, newCategory);
 
-        return EventMapper.toEventFullDto(eventFromId);
+        return EventMapper.toEventFullDto(eventById);
     }
 
     @Override
@@ -169,19 +166,19 @@ public class EventServiceImp implements EventService {
     public EventFullDto publishByAdmin(Long eventId) {
         checkArgumentAndIfNullThrowException(eventId, "eventId");
 
-        Event eventFromId = eventRepository.findById(eventId)
+        Event eventById = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NoSuchElemException("Event doesn't exist with id="
                         + eventId));
 
-        if (eventFromId.getState() != StateEvent.PENDING) {
+        if (eventById.getState() != StateEvent.PENDING) {
             throw new StateElemException("Event with id=" + eventId
                     + " isn't in state" + StateEvent.PENDING);
         }
 
-        eventFromId.setState(StateEvent.PUBLISHED);
-        eventFromId.setPublishedOn(LocalDateTime.now());
+        eventById.setState(StateEvent.PUBLISHED);
+        eventById.setPublishedOn(LocalDateTime.now());
 
-        return EventMapper.toEventFullDto(eventFromId);
+        return EventMapper.toEventFullDto(eventById);
     }
 
     @Override
@@ -189,24 +186,24 @@ public class EventServiceImp implements EventService {
     public EventFullDto rejectByAdmin(Long eventId) {
         checkArgumentAndIfNullThrowException(eventId, "eventId");
 
-        Event eventFromId = eventRepository.findById(eventId)
+        Event eventById = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NoSuchElemException("Event doesn't exist with id="
                         + eventId));
 
-        if (eventFromId.getState() != StateEvent.PENDING) {
+        if (eventById.getState() != StateEvent.PENDING) {
             throw new StateElemException("Event with id=" + eventId
                     + " isn't in state" + StateEvent.PENDING);
         }
 
-        eventFromId.setState(StateEvent.CANCELED);
-        return EventMapper.toEventFullDto(eventFromId);
+        eventById.setState(StateEvent.CANCELED);
+        return EventMapper.toEventFullDto(eventById);
     }
 
     @Override
     public List<EventFullDto> getListByAdmin(List<Long> users, List<StateEvent> states, List<Long> categories,
                                              String rangeStart, String rangeEnd, PageRequestFrom pageRequest) {
-        Specification<Event> specification = createQuerySpecification(users, states, categories,
-                rangeStart, rangeEnd, pageRequest);
+        Specification<Event> specification = prepareFilterSpecification(users, states, categories,
+                rangeStart, rangeEnd);
 
         List<Event> events = eventRepository.findAll(specification, pageRequest);
 
@@ -218,14 +215,14 @@ public class EventServiceImp implements EventService {
         checkArgumentAndIfNullThrowException(eventId, "eventId");
         statClient.saveHit(request);
 
-        Event event = eventRepository.findByIdAndState(eventId, StateEvent.PUBLISHED)
+        Event publishedEventById = eventRepository.findByIdAndState(eventId, StateEvent.PUBLISHED)
                 .orElseThrow(() -> new NoSuchElemException("Event doesn't exist with id="
                         + eventId + " and with state:" + StateEvent.PUBLISHED));
 
 
-        EventFullDto eventFullDto = EventMapper.toEventFullDto(event);
+        EventFullDto eventFullDto = EventMapper.toEventFullDto(publishedEventById);
 
-        Map<Long, Long> views = statClient.getViewsForEvents(List.of(event), false);
+        Map<Long, Long> views = statClient.getViewsForEvents(List.of(publishedEventById), false);
         eventFullDto.setViews(views.get(eventId));
 
         Integer confirmedRequests = requestRepository.countAllByEvent_IdAndStatus(eventId, StateRequest.CONFIRMED);
@@ -241,18 +238,17 @@ public class EventServiceImp implements EventService {
         statClient.saveHit(request);
 
         Specification<Event> specification = prepareFilterSpecification(text, categories, paid, rangeStart,
-                rangeEnd, onlyAvailable, pageRequest);
+                rangeEnd, onlyAvailable);
 
-        List<Event> events = eventRepository.findAll(specification, pageRequest);
-        List<EventShortDto> dtos = EventMapper.toEventShortDtos(events);
+        List<Event> eventsFromSpec = eventRepository.findAll(specification, pageRequest);
+        List<EventShortDto> dtos = EventMapper.toEventShortDtos(eventsFromSpec);
 
-        Map<Long, Long> views = statClient.getViewsForEvents(events, false);
+        Map<Long, Long> views = statClient.getViewsForEvents(eventsFromSpec, false);
         dtos.forEach((dto) ->
                 {
                     dto.setViews(views.get(dto.getId()));
                 }
         );
-        //TODO:  количество просмотров и количество уже одобренных заявок. Не нравится, что делается это для каждого события, а не сразу считается
 
         dtos.forEach((dto) ->
         {
@@ -261,33 +257,38 @@ public class EventServiceImp implements EventService {
             dto.setConfirmedRequests(countConfirmedRequests);
         });
 
-        return EventMapper.toEventShortDtos(events);
+        return EventMapper.toEventShortDtos(eventsFromSpec);
     }
 
     private Specification<Event> prepareFilterSpecification(String text, List<Long> categories, Boolean paid,
-                                                            String rangeStart, String rangeEnd, Boolean onlyAvailable,
-                                                            PageRequestFrom pageRequest) {
+                                                            String rangeStart, String rangeEnd, Boolean onlyAvailable) {
+
         return (root, query, builder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
             predicates.add(builder.equal(root.get("state"), StateEvent.PUBLISHED));
+
+            if (paid != null) {
+                predicates.add(builder.equal(root.get("paid"), paid));
+            }
+
             if (text != null && !text.isEmpty()) {
                 predicates.add(builder.or(builder.like(builder.lower(root.get("annotation")),
                                 "%" + text.toLowerCase() + "%"),
                         builder.like(builder.lower(root.get("description")), "%" + text.toLowerCase() + "%")));
             }
-            if (categories != null) {
-                predicates.add(builder.and(root.get("category").in(categories)));
-            }
-            if (paid != null) {
-                predicates.add(builder.equal(root.get("paid"), paid));
-            }
+
             if ((rangeStart != null && rangeEnd != null)) {
                 predicates.add(builder.greaterThan(root.get("eventDate"), LocalDateTime.parse(rangeStart,
                         DateTimeFormat.formatter)));
                 predicates.add(builder.lessThan(root.get("eventDate"), LocalDateTime.parse(rangeEnd,
                         DateTimeFormat.formatter)));
             }
+
+            if (categories != null) {
+                predicates.add(builder.and(root.get("category").in(categories)));
+            }
+
             if (onlyAvailable) {
                 predicates.add(builder.or(builder.equal(root.get("participantLimit"), 0),
                         builder.and(builder.notEqual(root.get("participantLimit"), 0),
@@ -298,25 +299,31 @@ public class EventServiceImp implements EventService {
         };
     }
 
-    private Specification<Event> createQuerySpecification(List<Long> users, List<StateEvent> states, List<Long> categories, String rangeStart, String rangeEnd, PageRequestFrom pageRequest) {
+    private Specification<Event> prepareFilterSpecification(List<Long> users, List<StateEvent> states,
+                                                            List<Long> categories, String rangeStart,
+                                                            String rangeEnd) {
         return (root, query, builder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
             if (users != null && !users.isEmpty()) {
                 predicates.add(builder.and(root.get("creator").in(users)));
             }
-            if (states != null && !states.isEmpty()) {
-                predicates.add(builder.and(root.get("state").in(states)));
-            }
-            if (categories != null && !categories.isEmpty()) {
-                predicates.add(builder.and(root.get("category").in(categories)));
-            }
+
             if ((rangeStart != null && rangeEnd != null)) {
                 predicates.add(builder.greaterThan(root.get("eventDate"),
                         LocalDateTime.parse(rangeStart, DateTimeFormat.formatter)));
                 predicates.add(builder.lessThan(root.get("eventDate"),
                         LocalDateTime.parse(rangeEnd, DateTimeFormat.formatter)));
             }
+
+            if (categories != null && !categories.isEmpty()) {
+                predicates.add(builder.and(root.get("category").in(categories)));
+            }
+
+            if (states != null && !states.isEmpty()) {
+                predicates.add(builder.and(root.get("state").in(states)));
+            }
+
             return builder.and(predicates.toArray(new Predicate[0]));
         };
     }
@@ -331,6 +338,11 @@ public class EventServiceImp implements EventService {
             eventFromId.setCategory(newCategory);
         }
 
+        if (adminUpdateEventRequestDto.getLocation() != null) {
+            eventFromId.setLon(adminUpdateEventRequestDto.getLocation().getLon());
+            eventFromId.setLat(adminUpdateEventRequestDto.getLocation().getLat());
+        }
+
         if (adminUpdateEventRequestDto.getDescription() != null) {
             eventFromId.setDescription(adminUpdateEventRequestDto.getDescription());
         }
@@ -340,21 +352,16 @@ public class EventServiceImp implements EventService {
                     DateTimeFormat.formatter));
         }
 
-        if (adminUpdateEventRequestDto.getLocation() != null) {
-            eventFromId.setLon(adminUpdateEventRequestDto.getLocation().getLon());
-            eventFromId.setLat(adminUpdateEventRequestDto.getLocation().getLat());
-        }
-
         if (adminUpdateEventRequestDto.getPaid() != null) {
             eventFromId.setPaid(adminUpdateEventRequestDto.getPaid());
         }
 
-        if (adminUpdateEventRequestDto.getParticipantLimit() != null) {
-            eventFromId.setParticipantLimit(adminUpdateEventRequestDto.getParticipantLimit());
-        }
-
         if (adminUpdateEventRequestDto.getTitle() != null) {
             eventFromId.setTitle(adminUpdateEventRequestDto.getTitle());
+        }
+
+        if (adminUpdateEventRequestDto.getParticipantLimit() != null) {
+            eventFromId.setParticipantLimit(adminUpdateEventRequestDto.getParticipantLimit());
         }
     }
 
@@ -395,5 +402,4 @@ public class EventServiceImp implements EventService {
             throw new IlLegalArgumentException(title + "is null");
         }
     }
-
 }

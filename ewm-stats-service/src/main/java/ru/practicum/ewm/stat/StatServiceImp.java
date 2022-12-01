@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import static java.net.URLDecoder.decode;
+
 @Service
 @RequiredArgsConstructor
 public class StatServiceImp implements StatService {
@@ -24,6 +26,7 @@ public class StatServiceImp implements StatService {
     public EndPointHit hit(EndPointHit endpointHit) {
         Stat stat = StatMapper.toStat(endpointHit);
         Stat save = statRepository.save(stat);
+
         return StatMapper.toEndPointHit(save);
     }
 
@@ -31,8 +34,9 @@ public class StatServiceImp implements StatService {
     @Transactional
     public List<ViewStats> get(String start, String end, Set<String> uris, Boolean unique) {
         List<ViewStats> viewStats;
-        LocalDateTime startTime = LocalDateTime.parse(decode(start), DateTimeFormat.formatter);
-        LocalDateTime endTime = LocalDateTime.parse(decode(end), DateTimeFormat.formatter);
+
+        LocalDateTime startTime = LocalDateTime.parse(toUTF8(start), DateTimeFormat.formatter);
+        LocalDateTime endTime = LocalDateTime.parse(toUTF8(end), DateTimeFormat.formatter);
 
         if (unique) {
             viewStats = getUnique(uris, startTime, endTime);
@@ -67,7 +71,7 @@ public class StatServiceImp implements StatService {
         return viewStats;
     }
 
-    private String decode(String encoded) {
-        return java.net.URLDecoder.decode(encoded, StandardCharsets.UTF_8);
+    private String toUTF8(String encoded) {
+        return decode(encoded, StandardCharsets.UTF_8);
     }
 }

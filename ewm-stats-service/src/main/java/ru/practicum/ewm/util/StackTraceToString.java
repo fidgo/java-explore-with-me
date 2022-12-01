@@ -11,6 +11,7 @@ public class StackTraceToString {
         StringWriter stringWriter = new StringWriter();
         PrintWriter printWriter = new PrintWriter(stringWriter);
         throwable.printStackTrace(printWriter);
+
         return Collections.singletonList(stringWriter.toString());
     }
 }

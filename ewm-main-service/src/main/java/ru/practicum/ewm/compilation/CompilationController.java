@@ -22,7 +22,6 @@ public class CompilationController {
     @PostMapping("/admin/compilations")
     public CompilationDto createByAdmin(@Validated({Create.class}) @RequestBody NewCompilationDto newCompilationDto,
                                         HttpServletRequest request) {
-
         log.info("{}:{}:{}#To create compilation with compilation={}",
                 this.getClass().getSimpleName(),
                 "createByAdmin",
@@ -37,7 +36,6 @@ public class CompilationController {
     public CompilationDto addEventByAdmin(@PathVariable Long compId,
                                           @PathVariable Long eventId,
                                           HttpServletRequest request) {
-
         log.info("{}:{}:{}#To add  event:{} to compilation with id:{}",
                 this.getClass().getSimpleName(),
                 "getByPublic",
@@ -52,7 +50,6 @@ public class CompilationController {
     @PatchMapping("/admin/compilations/{compId}/pin")
     public CompilationDto addPinByAdmin(@PathVariable Long compId,
                                         HttpServletRequest request) {
-
         log.info("{}:{}:{}#To pin  compilation:{}",
                 this.getClass().getSimpleName(),
                 "addPinByAdmin",
@@ -68,7 +65,6 @@ public class CompilationController {
                                                 @RequestParam(name = "size", defaultValue = "10") Integer size,
                                                 @RequestParam(name = "pinned", required = false) Boolean pinned,
                                                 HttpServletRequest request) {
-
         log.info("{}:{}:{}#To get compilations from:{} size:{} pinned: {}",
                 this.getClass().getSimpleName(),
                 "getListByPublic",
@@ -79,14 +75,12 @@ public class CompilationController {
         );
 
         final PageRequestFrom pageRequest = new PageRequestFrom(size, from, Sort.unsorted());
-
         return compilationService.getListByPublic(pinned, pageRequest);
     }
 
     @GetMapping("/compilations/{compId}")
     public CompilationDto getByPublic(@PathVariable("compId") Long compId,
                                       HttpServletRequest request) {
-
         log.info("{}:{}:{}#To get compilation with id:{}",
                 this.getClass().getSimpleName(),
                 "getByPublic",
@@ -101,7 +95,6 @@ public class CompilationController {
     public CompilationDto deleteEventByAdmin(@PathVariable Long compId,
                                              @PathVariable Long eventId,
                                              HttpServletRequest request) {
-
         log.info("{}:{}:{}#To delete  event:{} from compilation with id:{}",
                 this.getClass().getSimpleName(),
                 "deleteEventByAdmin",
@@ -116,7 +109,6 @@ public class CompilationController {
     @DeleteMapping("/admin/compilations/{compId}/pin")
     public void deletePinByAdmin(@PathVariable Long compId,
                                  HttpServletRequest request) {
-
         log.info("{}:{}:{}#To remove pin from compilation:{}",
                 this.getClass().getSimpleName(),
                 "deletePinByAdmin",
@@ -129,7 +121,6 @@ public class CompilationController {
 
     @DeleteMapping("/admin/compilations/{compId}")
     public void deleteByAdmin(@PathVariable Long compId, HttpServletRequest request) {
-
         log.info("{}:{}:{}#To delete compilation:{}",
                 this.getClass().getSimpleName(),
                 "deletePinByAdmin",

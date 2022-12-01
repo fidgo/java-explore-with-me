@@ -30,8 +30,8 @@ public class CategoryServiceImp implements CategoryService {
             throw new AlreadyExistException("This category already exist:" + newCategoryDto);
         }
 
-        Category fromDto = CategoryMapper.toCategory(newCategoryDto);
-        Category save = categoryRepository.save(fromDto);
+        Category inputCategory = CategoryMapper.toCategory(newCategoryDto);
+        Category save = categoryRepository.save(inputCategory);
         return CategoryMapper.toCategoryDto(save);
     }
 
@@ -43,8 +43,8 @@ public class CategoryServiceImp implements CategoryService {
             throw new AlreadyExistException("This category already exist:" + categoryDto);
         }
 
-        Category fromDto = CategoryMapper.toCategory(categoryDto);
-        Category update = categoryRepository.save(fromDto);
+        Category inputCategory = CategoryMapper.toCategory(categoryDto);
+        Category update = categoryRepository.save(inputCategory);
         return CategoryMapper.toCategoryDto(update);
     }
 
@@ -62,10 +62,10 @@ public class CategoryServiceImp implements CategoryService {
     public CategoryDto getByPublic(Long catId) {
         checkArgumentAndIfNullThrowException(catId, "catId");
 
-        Category categoryFromId = categoryRepository.findById(catId)
+        Category categoryById = categoryRepository.findById(catId)
                 .orElseThrow(() -> new NoSuchElemException("Category doesn't exist with id=" + catId));
 
-        return CategoryMapper.toCategoryDto(categoryFromId);
+        return CategoryMapper.toCategoryDto(categoryById);
     }
 
     @Override
@@ -73,12 +73,12 @@ public class CategoryServiceImp implements CategoryService {
     public void deleteByAdmin(Long catId) {
         checkArgumentAndIfNullThrowException(catId, "catId");
 
-        Category categoryFromId = categoryRepository.findById(catId)
+        Category categoryById = categoryRepository.findById(catId)
                 .orElseThrow(() -> new NoSuchElemException("Category doesn't exist with id=" + catId));
 
-        if (eventRepository.existsByCategory_Id(categoryFromId.getId())) {
+        if (eventRepository.existsByCategory_Id(categoryById.getId())) {
             throw new AlreadyExistException("Unable to delete category! Category:"
-                    + categoryFromId + "connect with event");
+                    + categoryById + "connect with event");
         }
 
         categoryRepository.deleteById(catId);

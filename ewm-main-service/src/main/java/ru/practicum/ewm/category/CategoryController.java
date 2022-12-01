@@ -23,7 +23,6 @@ public class CategoryController {
     @PostMapping("/admin/categories")
     CategoryDto createByAdmin(@Validated({Create.class}) @RequestBody NewCategoryDto newCategoryDto,
                               HttpServletRequest request) {
-
         log.info("{}:{}:{}#To create category with category={}",
                 this.getClass().getSimpleName(),
                 "createByAdmin",
@@ -37,7 +36,6 @@ public class CategoryController {
     @PatchMapping("/admin/categories")
     CategoryDto updateByAdmin(@Validated({Update.class}) @RequestBody CategoryDto categoryDto,
                               HttpServletRequest request) {
-
         log.info("{}:{}:{}#To update category with category={}",
                 this.getClass().getSimpleName(),
                 "updateByAdmin",
@@ -51,7 +49,6 @@ public class CategoryController {
     List<CategoryDto> getListByPublic(@RequestParam(name = "from", defaultValue = "0") Integer from,
                                       @RequestParam(name = "size", defaultValue = "10") Integer size,
                                       HttpServletRequest request) {
-
         log.info("{}:{}:{}#To get categories from={} size={}",
                 this.getClass().getSimpleName(),
                 "getListByPublic",
@@ -67,7 +64,6 @@ public class CategoryController {
     @GetMapping("/categories/{catId}")
     CategoryDto getByPublic(@PathVariable("catId") Long catId,
                             HttpServletRequest request) {
-
         log.info("{}:{}:{}#To get category with={}",
                 this.getClass().getSimpleName(),
                 "getByPublic",
@@ -81,7 +77,6 @@ public class CategoryController {
     @DeleteMapping("/admin/categories/{catId}")
     void deleteByAdmin(@PathVariable("catId") Long catId,
                        HttpServletRequest request) {
-
         log.info("{}:{}:{}#To delete category with={}",
                 this.getClass().getSimpleName(),
                 "deleteByAdmin",

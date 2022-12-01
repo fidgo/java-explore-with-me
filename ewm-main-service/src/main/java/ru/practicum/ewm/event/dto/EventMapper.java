@@ -36,15 +36,11 @@ public class EventMapper {
 
     public static EventFullDto toEventFullDto(Event event) {
         EventFullDto eventFullDto = new EventFullDto();
-
         eventFullDto.setAnnotation(event.getAnnotation());
 
         eventFullDto.setCategory(new EventFullDto.CategoryDto());
         eventFullDto.getCategory().setId(event.getCategory().getId());
         eventFullDto.getCategory().setName(event.getCategory().getName());
-
-        //TODO: дописать confirmedRequests - Количество одобренных заявок на участие в данном событии
-        eventFullDto.setConfirmedRequests(0);
 
         eventFullDto.setCreatedOn(event.getDateCreate().format(DateTimeFormat.formatter));
         eventFullDto.setDescription(event.getDescription());
@@ -58,8 +54,6 @@ public class EventMapper {
         eventFullDto.setLocation(new EventFullDto.Location());
         eventFullDto.getLocation().setLat(event.getLat());
         eventFullDto.getLocation().setLon(event.getLon());
-
-        //TODO: дописать views
 
         eventFullDto.setPublishedOn(eventFullDto.getPublishedOn());
         eventFullDto.setPaid(event.getPaid());

@@ -11,7 +11,6 @@ import ru.practicum.ewm.user.dto.UserShortDto;
 @EqualsAndHashCode
 @ToString
 public class EventShortDto {
-
     private String annotation;
 
     private CategoryDto category;

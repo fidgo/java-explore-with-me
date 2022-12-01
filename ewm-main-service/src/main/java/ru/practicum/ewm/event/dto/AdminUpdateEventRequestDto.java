@@ -8,7 +8,6 @@ import lombok.*;
 @NoArgsConstructor
 @ToString
 public class AdminUpdateEventRequestDto {
-
     private String annotation;
 
     private Long category;
