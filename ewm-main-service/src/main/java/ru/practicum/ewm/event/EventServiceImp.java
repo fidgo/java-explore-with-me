@@ -244,14 +244,12 @@ public class EventServiceImp implements EventService {
         List<EventShortDto> dtos = EventMapper.toEventShortDtos(eventsFromSpec);
 
         Map<Long, Long> views = statClient.getViewsForEvents(eventsFromSpec, false);
-        dtos.forEach((dto) ->
-                {
+        dtos.forEach((dto) -> {
                     dto.setViews(views.get(dto.getId()));
                 }
         );
 
-        dtos.forEach((dto) ->
-        {
+        dtos.forEach((dto) -> {
             Integer countConfirmedRequests =
                     requestRepository.countAllByEvent_IdAndStatus(dto.getId(), StateRequest.CONFIRMED);
             dto.setConfirmedRequests(countConfirmedRequests);

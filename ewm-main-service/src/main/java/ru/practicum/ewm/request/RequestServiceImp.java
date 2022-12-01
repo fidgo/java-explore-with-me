@@ -158,8 +158,7 @@ public class RequestServiceImp implements RequestService {
             List<Request> pendingRequests =
                     requestRepository.findAllByEvent_IdAndRequester_IdAndStatus(eventId, requestId,
                             StateRequest.PENDING);
-            pendingRequests.forEach((req ->
-            {
+            pendingRequests.forEach((req -> {
                 req.setStatus(StateRequest.CANCELED);
             }
             ));
