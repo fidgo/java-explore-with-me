@@ -43,7 +43,7 @@
 * `StatClient` — клиент внутри основного сервиса для связи с сервисом статистики;
 * `ewm-stats` — **сервис статистики**, связан с модулем `ewm-stats-service`;
 * `ewm-service-db` - сервис бд для основного сервиса, зависит от основного сервиса;
-* `stats-db` - сервис бд для статистики, зависит от сервиса статистики.
+* `ewm-stats-db` - сервис бд для статистики, зависит от сервиса статистики.
 
 ### 2.1. docker-compose.yaml
 
@@ -379,11 +379,39 @@ public class ApiError {
 @RestControllerAdvice
 @Slf4j
 public class ErrorHandler {
+    @ExceptionHandler({IlLegalArgumentException.class, MethodArgumentNotValidException.class})
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiError handleExceptionReturn400(final RuntimeException e) {
+        log.info("400 {} {}", e.getMessage(), e);
+
+        return new ApiError(
+                StackTraceToString.exec(e),
+                e.getMessage(),
+                "For the requested operation the conditions are not met.",
+                HttpStatus.BAD_REQUEST,
+                LocalDateTime.now().format(DateTimeFormat.formatter)
+        );
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ApiError handleExceptionReturn403(final StateElemException e) {
+        log.info("403 {} {}", e.getMessage(), e);
+
+        return new ApiError(
+                StackTraceToString.exec(e),
+                e.getMessage(),
+                "For the requested operation the conditions are not met",
+                HttpStatus.FORBIDDEN,
+                LocalDateTime.now().format(DateTimeFormat.formatter)
+        );
+    }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ApiError handleAlreadyExistException(final NoSuchElemException e) {
+    public ApiError handleExceptionReturn404(final NoSuchElemException e) {
         log.info("404 {} {}", e.getMessage(), e);
+
         return new ApiError(
                 StackTraceToString.exec(e),
                 e.getMessage(),
@@ -395,8 +423,9 @@ public class ErrorHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.CONFLICT)
-    public ApiError handleAlreadyExistException(final AlreadyExistException e) {
+    public ApiError handleExceptionReturn409(final AlreadyExistException e) {
         log.info("409 {} {}", e.getMessage(), e);
+
         return new ApiError(
                 StackTraceToString.exec(e),
                 e.getMessage(),
@@ -406,51 +435,12 @@ public class ErrorHandler {
         );
     }
 
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.FORBIDDEN)
-    public ApiError handleStatusElemException(final StateElemException e) {
-        log.info("403 {} {}", e.getMessage(), e);
-        return new ApiError(
-                StackTraceToString.exec(e),
-                e.getMessage(),
-                "For the requested operation the conditions are not met",
-                HttpStatus.FORBIDDEN,
-                LocalDateTime.now().format(DateTimeFormat.formatter)
-        );
-    }
-
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiError handleIllegalArgumentException(final IlLegalArgumentException e) {
-        log.info("400 {} {}", e.getMessage(), e);
-        return new ApiError(
-                StackTraceToString.exec(e),
-                e.getMessage(),
-                "For the requested operation the conditions are not met.",
-                HttpStatus.BAD_REQUEST,
-                LocalDateTime.now().format(DateTimeFormat.formatter)
-        );
-    }
-
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiError handleMethodArgumentNotValidException(final MethodArgumentNotValidException e) {
-        log.info("400 {} {}", e.getMessage(), e);
-        return new ApiError(
-                StackTraceToString.exec(e),
-                e.getMessage(),
-                "For the requested operation the conditions are not met.",
-                HttpStatus.BAD_REQUEST,
-                LocalDateTime.now().format(DateTimeFormat.formatter)
-        );
-    }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ApiError handleThrowable(final Throwable e) {
+    public ApiError handleExceptionReturn500(final Throwable e) {
         log.info("500 {} {}", e.getMessage(), e);
+
         return new ApiError(
                 StackTraceToString.exec(e),
                 e.getMessage(),
@@ -482,6 +472,10 @@ public class ErrorHandler {
 - [ ] **Реализация выбранной дополнительной фичи.**
 
 ## 8. Приложение. Основной сервис. Эндпоинты
+
+<details>
+<summary>Развернуть эндпоинты</summary>
+
  **Public: События**
  **Публичный API для работы с событиями**
 * GET /events Получение событий с возможностью фильтрации
@@ -547,6 +541,8 @@ public class ErrorHandler {
 * POST /hit Сохранение информации о том, что к эндпоинту был запрос
 * GET /stats Получение статистики по посещениям.
 
+</details>
+
 ## 10. Приложение. Основной сервис. schema.sql
 <details>
 <summary>Развернуть код</summary>
@@ -562,7 +558,7 @@ DROP TABLE IF EXISTS requests CASCADE;
 CREATE TABLE IF NOT EXISTS users
 (
     id    BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL,
-    name  VARCHAR(255)                            NOT NULL,
+    name  VARCHAR(512)                            NOT NULL,
     email VARCHAR(512)                            NOT NULL,
 
     CONSTRAINT pk_user PRIMARY KEY (id),
@@ -573,7 +569,7 @@ CREATE TABLE IF NOT EXISTS compilations
 (
     id     BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL,
     pinned BOOLEAN                                 NOT NULL,
-    title  VARCHAR(1024)                           NOT NULL,
+    title  VARCHAR(120)                           NOT NULL,
 
     CONSTRAINT pk_compilation PRIMARY KEY (id)
 );
@@ -594,7 +590,7 @@ CREATE TABLE IF NOT EXISTS events
     description        VARCHAR(7000),
     annotation         VARCHAR(2000),
     title              VARCHAR(120),
-    state              VARCHAR(256),
+    state              VARCHAR(20),
     event_date         TIMESTAMP WITHOUT TIME ZONE,
     date_create        TIMESTAMP WITHOUT TIME ZONE             NOT NULL,
     published_on       TIMESTAMP WITHOUT TIME ZONE,
@@ -625,7 +621,7 @@ CREATE TABLE IF NOT EXISTS requests
     id           BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL,
     event_id     BIGINT                                  NOT NULL,
     requester_id BIGINT                                  NOT NULL,
-    status       VARCHAR(512)                            NOT NULL,
+    status       VARCHAR(20)                            NOT NULL,
     date_create  TIMESTAMP WITHOUT TIME ZONE             NOT NULL,
 
     CONSTRAINT pk_request PRIMARY KEY (id),

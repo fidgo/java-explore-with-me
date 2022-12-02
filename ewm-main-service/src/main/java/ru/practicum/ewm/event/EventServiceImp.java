@@ -11,6 +11,7 @@ import ru.practicum.ewm.error.NoSuchElemException;
 import ru.practicum.ewm.error.StateElemException;
 import ru.practicum.ewm.event.dto.*;
 import ru.practicum.ewm.http.client.StatClient;
+import ru.practicum.ewm.request.IdEventToCountRequests;
 import ru.practicum.ewm.request.RequestRepository;
 import ru.practicum.ewm.request.StateRequest;
 import ru.practicum.ewm.user.User;
@@ -24,6 +25,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -38,7 +40,7 @@ public class EventServiceImp implements EventService {
     @Override
     @Transactional
     public EventFullDto createByPrivate(NewEventDto newEventDto, Long userId) {
-        checkArgumentAndIfNullThrowException(userId, "userId");
+        throwIfTitleNotValid(userId, "userId");
 
         Category inputCategory = null;
         if (newEventDto.getCategory() != null) {
@@ -50,15 +52,14 @@ public class EventServiceImp implements EventService {
         User userById = userRepository.findById(userId)
                 .orElseThrow(() -> new NoSuchElemException("User doesn't exist with id=" + userId));
         Event inputEvent = EventMapper.toEvent(newEventDto, inputCategory, userById);
-        Event save = eventRepository.save(inputEvent);
 
-        return EventMapper.toEventFullDto(save);
+        return EventMapper.toEventFullDto(eventRepository.save(inputEvent));
     }
 
     @Override
     @Transactional
     public EventFullDto updateByPrivate(UpdateEventRequestDto updateEventDto, Long userId) {
-        checkArgumentAndIfNullThrowException(userId, "userId");
+        throwIfTitleNotValid(userId, "userId");
 
         User userById = userRepository.findById(userId)
                 .orElseThrow(() -> new NoSuchElemException("User doesn't exist with id=" + userId));
@@ -87,19 +88,21 @@ public class EventServiceImp implements EventService {
 
     @Override
     public List<EventFullDto> getListByPrivate(Long userId, PageRequestFrom pageRequest) {
-        checkArgumentAndIfNullThrowException(userId, "userId");
+        throwIfTitleNotValid(userId, "userId");
 
         userRepository.findById(userId)
                 .orElseThrow(() -> new NoSuchElemException("User doesn't exist with id=" + userId));
 
-        List<Event> eventsFromCreator = eventRepository.findAllByCreator_Id(userId, pageRequest);
-        return EventMapper.toEventFullDtos(eventsFromCreator);
+        return eventRepository.findAllByCreator_Id(userId, pageRequest)
+                .stream()
+                .map(EventMapper::toEventFullDto)
+                .collect(Collectors.toList());
     }
 
     @Override
     public EventFullDto getByPrivate(Long eventId, Long userId) {
-        checkArgumentAndIfNullThrowException(eventId, "eventId");
-        checkArgumentAndIfNullThrowException(userId, "userId");
+        throwIfTitleNotValid(eventId, "eventId");
+        throwIfTitleNotValid(userId, "userId");
 
         userRepository.findById(userId)
                 .orElseThrow(() -> new NoSuchElemException("User doesn't exist with id=" + userId));
@@ -120,8 +123,8 @@ public class EventServiceImp implements EventService {
     @Override
     @Transactional
     public EventFullDto cancelByPrivate(Long eventId, Long userId) {
-        checkArgumentAndIfNullThrowException(eventId, "eventId");
-        checkArgumentAndIfNullThrowException(userId, "userId");
+        throwIfTitleNotValid(eventId, "eventId");
+        throwIfTitleNotValid(userId, "userId");
 
         userRepository.findById(userId)
                 .orElseThrow(() -> new NoSuchElemException("User doesn't exist with id=" + userId));
@@ -143,13 +146,14 @@ public class EventServiceImp implements EventService {
         }
 
         eventById.setState(StateEvent.CANCELED);
+
         return EventMapper.toEventFullDto(eventById);
     }
 
     @Override
     @Transactional
     public EventFullDto editEventByAdmin(long eventId, AdminUpdateEventRequestDto adminUpdateEventRequestDto) {
-        checkArgumentAndIfNullThrowException(eventId, "eventId");
+        throwIfTitleNotValid(eventId, "eventId");
 
         Event eventById = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NoSuchElemException("Event doesn't exist with id="
@@ -164,7 +168,7 @@ public class EventServiceImp implements EventService {
     @Override
     @Transactional
     public EventFullDto publishByAdmin(Long eventId) {
-        checkArgumentAndIfNullThrowException(eventId, "eventId");
+        throwIfTitleNotValid(eventId, "eventId");
 
         Event eventById = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NoSuchElemException("Event doesn't exist with id="
@@ -184,7 +188,7 @@ public class EventServiceImp implements EventService {
     @Override
     @Transactional
     public EventFullDto rejectByAdmin(Long eventId) {
-        checkArgumentAndIfNullThrowException(eventId, "eventId");
+        throwIfTitleNotValid(eventId, "eventId");
 
         Event eventById = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NoSuchElemException("Event doesn't exist with id="
@@ -196,6 +200,7 @@ public class EventServiceImp implements EventService {
         }
 
         eventById.setState(StateEvent.CANCELED);
+
         return EventMapper.toEventFullDto(eventById);
     }
 
@@ -205,14 +210,15 @@ public class EventServiceImp implements EventService {
         Specification<Event> specification = prepareFilterSpecification(users, states, categories,
                 rangeStart, rangeEnd);
 
-        List<Event> events = eventRepository.findAll(specification, pageRequest);
-
-        return EventMapper.toEventFullDtos(events);
+        return eventRepository.findAll(specification, pageRequest)
+                .stream()
+                .map(EventMapper::toEventFullDto)
+                .collect(Collectors.toList());
     }
 
     @Override
     public EventFullDto getEventByPublic(Long eventId, HttpServletRequest request) {
-        checkArgumentAndIfNullThrowException(eventId, "eventId");
+        throwIfTitleNotValid(eventId, "eventId");
         statClient.saveHit(request);
 
         Event publishedEventById = eventRepository.findByIdAndState(eventId, StateEvent.PUBLISHED)
@@ -241,26 +247,35 @@ public class EventServiceImp implements EventService {
                 rangeEnd, onlyAvailable);
 
         List<Event> eventsFromSpec = eventRepository.findAll(specification, pageRequest);
-        List<EventShortDto> dtos = EventMapper.toEventShortDtos(eventsFromSpec);
-
         Map<Long, Long> views = statClient.getViewsForEvents(eventsFromSpec, false);
-        dtos.forEach((dto) -> {
-                    dto.setViews(views.get(dto.getId()));
-                }
-        );
+        Map<Long, Integer> idEventToCountedRequests = getCountedConfirmedRequestsOnEvents(eventsFromSpec);
+
+        List<EventShortDto> dtos = eventsFromSpec.stream()
+                .map(EventMapper::toEventShortDto)
+                .collect(Collectors.toList());
 
         dtos.forEach((dto) -> {
-            Integer countConfirmedRequests =
-                    requestRepository.countAllByEvent_IdAndStatus(dto.getId(), StateRequest.CONFIRMED);
-            dto.setConfirmedRequests(countConfirmedRequests);
+            dto.setViews(views.get(dto.getId()));
+            dto.setConfirmedRequests(idEventToCountedRequests.get(dto.getId()));
         });
 
-        return EventMapper.toEventShortDtos(eventsFromSpec);
+        return dtos;
+    }
+
+    private Map<Long, Integer> getCountedConfirmedRequestsOnEvents(List<Event> eventsFromSpec) {
+        List<Long> idsEventsFromSpec = eventsFromSpec.stream().map(Event::getId).collect(Collectors.toList());
+
+        return requestRepository
+                .getListEventIdsToCountedRequestsWithStatus(idsEventsFromSpec, StateRequest.CONFIRMED)
+                .stream()
+                .collect(Collectors.
+                        toMap(IdEventToCountRequests::getIdEvent, IdEventToCountRequests::getCountStatusRequests,
+                                (oldValue, newValue) -> oldValue
+                        ));
     }
 
     private Specification<Event> prepareFilterSpecification(String text, List<Long> categories, Boolean paid,
                                                             String rangeStart, String rangeEnd, Boolean onlyAvailable) {
-
         return (root, query, builder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -395,7 +410,7 @@ public class EventServiceImp implements EventService {
         currentEvent.setState(StateEvent.PENDING);
     }
 
-    private void checkArgumentAndIfNullThrowException(Object variable, String title) {
+    private void throwIfTitleNotValid(Object variable, String title) {
         if (variable == null) {
             throw new IlLegalArgumentException(title + "is null");
         }

@@ -42,6 +42,7 @@ public class CategoryController {
                 request.getRequestURI(),
                 categoryDto
         );
+
         return categoryService.updateByAdmin(categoryDto);
     }
 
@@ -58,6 +59,7 @@ public class CategoryController {
         );
 
         final PageRequestFrom pageRequest = new PageRequestFrom(size, from, Sort.unsorted());
+
         return categoryService.getListByPublic(pageRequest);
     }
 

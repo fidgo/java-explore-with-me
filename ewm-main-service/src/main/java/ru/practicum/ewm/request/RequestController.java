@@ -81,7 +81,6 @@ public class RequestController {
     List<ParticipationRequestDto> getListToEventFromCreatorByPrivate(@PathVariable Long userId,
                                                                      @PathVariable Long eventId,
                                                                      HttpServletRequest request) {
-
         log.info("{}:{}:{}#To get all request to event:{} by creator:{} request",
                 this.getClass().getSimpleName(),
                 "getListToEventFromCreatorByPrivate",

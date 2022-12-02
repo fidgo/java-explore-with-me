@@ -14,10 +14,39 @@ import java.time.LocalDateTime;
 @RestControllerAdvice
 @Slf4j
 public class ErrorHandler {
+    @ExceptionHandler({IlLegalArgumentException.class, MethodArgumentNotValidException.class})
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiError handleExceptionReturn400(final RuntimeException e) {
+        log.info("400 {} {}", e.getMessage(), e);
+
+        return new ApiError(
+                StackTraceToString.exec(e),
+                e.getMessage(),
+                "For the requested operation the conditions are not met.",
+                HttpStatus.BAD_REQUEST,
+                LocalDateTime.now().format(DateTimeFormat.formatter)
+        );
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ApiError handleExceptionReturn403(final StateElemException e) {
+        log.info("403 {} {}", e.getMessage(), e);
+
+        return new ApiError(
+                StackTraceToString.exec(e),
+                e.getMessage(),
+                "For the requested operation the conditions are not met",
+                HttpStatus.FORBIDDEN,
+                LocalDateTime.now().format(DateTimeFormat.formatter)
+        );
+    }
+
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ApiError handleAlreadyExistException(final NoSuchElemException e) {
+    public ApiError handleExceptionReturn404(final NoSuchElemException e) {
         log.info("404 {} {}", e.getMessage(), e);
+
         return new ApiError(
                 StackTraceToString.exec(e),
                 e.getMessage(),
@@ -29,8 +58,9 @@ public class ErrorHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.CONFLICT)
-    public ApiError handleAlreadyExistException(final AlreadyExistException e) {
+    public ApiError handleExceptionReturn409(final AlreadyExistException e) {
         log.info("409 {} {}", e.getMessage(), e);
+
         return new ApiError(
                 StackTraceToString.exec(e),
                 e.getMessage(),
@@ -41,50 +71,10 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.FORBIDDEN)
-    public ApiError handleStatusElemException(final StateElemException e) {
-        log.info("403 {} {}", e.getMessage(), e);
-        return new ApiError(
-                StackTraceToString.exec(e),
-                e.getMessage(),
-                "For the requested operation the conditions are not met",
-                HttpStatus.FORBIDDEN,
-                LocalDateTime.now().format(DateTimeFormat.formatter)
-        );
-    }
-
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiError handleIllegalArgumentException(final IlLegalArgumentException e) {
-        log.info("400 {} {}", e.getMessage(), e);
-        return new ApiError(
-                StackTraceToString.exec(e),
-                e.getMessage(),
-                "For the requested operation the conditions are not met.",
-                HttpStatus.BAD_REQUEST,
-                LocalDateTime.now().format(DateTimeFormat.formatter)
-        );
-    }
-
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiError handleMethodArgumentNotValidException(final MethodArgumentNotValidException e) {
-        log.info("400 {} {}", e.getMessage(), e);
-        return new ApiError(
-                StackTraceToString.exec(e),
-                e.getMessage(),
-                "For the requested operation the conditions are not met.",
-                HttpStatus.BAD_REQUEST,
-                LocalDateTime.now().format(DateTimeFormat.formatter)
-        );
-    }
-
-    @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ApiError handleThrowable(final Throwable e) {
+    public ApiError handleExceptionReturn500(final Throwable e) {
         log.info("500 {} {}", e.getMessage(), e);
+
         return new ApiError(
                 StackTraceToString.exec(e),
                 e.getMessage(),

@@ -8,7 +8,6 @@ import java.util.List;
 
 public class StackTraceToString {
     public static List<String> exec(Throwable throwable) {
-
         StringWriter stringWriter = new StringWriter();
         PrintWriter printWriter = new PrintWriter(stringWriter);
         throwable.printStackTrace(printWriter);

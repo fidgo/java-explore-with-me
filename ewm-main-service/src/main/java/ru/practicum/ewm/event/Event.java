@@ -28,17 +28,17 @@ public class Event {
     @ManyToOne
     private User creator;
 
-    @Column(name = "description")
+    @Column(name = "description", length = 7000)
     private String description;
 
-    @Column(name = "annotation")
+    @Column(name = "annotation", length = 2000)
     private String annotation;
 
-    @Column(name = "title")
+    @Column(name = "title", length = 120)
     private String title;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "state")
+    @Column(name = "state", length = 20)
     private StateEvent state;
 
     @Column(name = "event_date")

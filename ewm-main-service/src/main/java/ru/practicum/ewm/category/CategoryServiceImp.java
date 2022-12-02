@@ -31,8 +31,8 @@ public class CategoryServiceImp implements CategoryService {
         }
 
         Category inputCategory = CategoryMapper.toCategory(newCategoryDto);
-        Category save = categoryRepository.save(inputCategory);
-        return CategoryMapper.toCategoryDto(save);
+
+        return CategoryMapper.toCategoryDto(categoryRepository.save(inputCategory));
     }
 
     @Override
@@ -44,34 +44,36 @@ public class CategoryServiceImp implements CategoryService {
         }
 
         Category inputCategory = CategoryMapper.toCategory(categoryDto);
-        Category update = categoryRepository.save(inputCategory);
-        return CategoryMapper.toCategoryDto(update);
+
+        return CategoryMapper.toCategoryDto(categoryRepository.save(inputCategory));
     }
 
     @Override
     public List<CategoryDto> getListByPublic(PageRequestFrom pageRequest) {
-        List<Category> categories = categoryRepository
+        return categoryRepository
                 .findAll(pageRequest)
                 .stream()
+                .map(CategoryMapper::toCategoryDto)
                 .collect(Collectors.toList());
-
-        return CategoryMapper.toCategoryDtos(categories);
     }
 
     @Override
     public CategoryDto getByPublic(Long catId) {
-        checkArgumentAndIfNullThrowException(catId, "catId");
+        throwIfTitleNotValid(catId, "catId");
 
-        Category categoryById = categoryRepository.findById(catId)
-                .orElseThrow(() -> new NoSuchElemException("Category doesn't exist with id=" + catId));
-
-        return CategoryMapper.toCategoryDto(categoryById);
+        return categoryRepository.findById(catId)
+                .map(CategoryMapper::toCategoryDto)
+                .orElseThrow(
+                        () -> {
+                            throw new NoSuchElemException("Category doesn't exist with id=" + catId);
+                        }
+                );
     }
 
     @Override
     @Transactional
     public void deleteByAdmin(Long catId) {
-        checkArgumentAndIfNullThrowException(catId, "catId");
+        throwIfTitleNotValid(catId, "catId");
 
         Category categoryById = categoryRepository.findById(catId)
                 .orElseThrow(() -> new NoSuchElemException("Category doesn't exist with id=" + catId));
@@ -84,7 +86,7 @@ public class CategoryServiceImp implements CategoryService {
         categoryRepository.deleteById(catId);
     }
 
-    private void checkArgumentAndIfNullThrowException(Object variable, String title) {
+    private void throwIfTitleNotValid(Object variable, String title) {
         if (variable == null) {
             throw new IlLegalArgumentException(title + "is null");
         }

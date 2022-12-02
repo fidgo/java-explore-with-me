@@ -45,6 +45,7 @@ public class UserController {
                 size);
 
         final PageRequestFrom pageRequest = new PageRequestFrom(size, from, Sort.unsorted());
+
         return userService.getByAdmin(ids, pageRequest);
     }
 

@@ -119,6 +119,7 @@ public class EventController {
                 size);
 
         final PageRequestFrom pageRequest = new PageRequestFrom(size, from, Sort.unsorted());
+
         return eventService.getListByPrivate(userId, pageRequest);
     }
 
@@ -163,6 +164,7 @@ public class EventController {
         );
 
         final PageRequestFrom pageRequest = new PageRequestFrom(size, from, Sort.unsorted());
+
         return eventService.getListByAdmin(users, states, categories, rangeStart, rangeEnd, pageRequest);
     }
 
@@ -207,6 +209,7 @@ public class EventController {
                 sorting = Sort.by(Sort.Direction.ASC, "id");
         }
         final PageRequestFrom pageRequest = new PageRequestFrom(size, from, sorting);
+
         return eventService.getListByPublic(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, pageRequest, request);
     }
 

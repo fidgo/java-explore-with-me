@@ -13,11 +13,11 @@ import java.time.LocalDateTime;
 @RestControllerAdvice
 @Slf4j
 public class ErrorHandler {
-
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ApiError handleThrowable(final Throwable e) {
+    public ApiError handleExceptionReturn500(final Throwable e) {
         log.info("500 {} {}", e.getMessage(), e);
+
         return new ApiError(
                 StackTraceToString.exec(e),
                 e.getMessage(),

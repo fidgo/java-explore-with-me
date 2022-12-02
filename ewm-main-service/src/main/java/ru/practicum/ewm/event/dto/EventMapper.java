@@ -9,9 +9,6 @@ import ru.practicum.ewm.user.dto.UserMapper;
 import ru.practicum.ewm.util.DateTimeFormat;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 public class EventMapper {
     public static Event toEvent(NewEventDto newEventDto, Category category, User creator) {
@@ -23,14 +20,19 @@ public class EventMapper {
         event.setDescription(newEventDto.getDescription());
         event.setAnnotation(newEventDto.getAnnotation());
         event.setTitle(newEventDto.getTitle());
+
         event.setState(StateEvent.PENDING);
+
         event.setEventDate(newEventDto.getEventDate());
         event.setDateCreate(LocalDateTime.now());
+
         event.setLat(newEventDto.getLocation().getLat());
         event.setLon(newEventDto.getLocation().getLon());
+
         event.setParticipantLimit(newEventDto.getParticipantLimit());
         event.setRequestModeration(newEventDto.getRequestModeration());
         event.setPaid(newEventDto.getPaid());
+
         return event;
     }
 
@@ -61,11 +63,8 @@ public class EventMapper {
         eventFullDto.setRequestModeration(event.getRequestModeration());
         eventFullDto.setState(event.getState());
         eventFullDto.setTitle(event.getTitle());
-        return eventFullDto;
-    }
 
-    public static List<EventFullDto> toEventFullDtos(List<Event> events) {
-        return events.stream().map(EventMapper::toEventFullDto).collect(Collectors.toList());
+        return eventFullDto;
     }
 
     public static EventShortDto toEventShortDto(Event event) {
@@ -83,13 +82,5 @@ public class EventMapper {
         eventShortDto.setEventDate(event.getEventDate().format(DateTimeFormat.formatter));
 
         return eventShortDto;
-    }
-
-    public static Set<EventShortDto> toNewEventDtoSet(Set<Event> events) {
-        return events.stream().map(EventMapper::toEventShortDto).collect(Collectors.toSet());
-    }
-
-    public static List<EventShortDto> toEventShortDtos(List<Event> events) {
-        return events.stream().map(EventMapper::toEventShortDto).collect(Collectors.toList());
     }
 }

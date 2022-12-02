@@ -75,6 +75,7 @@ public class CompilationController {
         );
 
         final PageRequestFrom pageRequest = new PageRequestFrom(size, from, Sort.unsorted());
+
         return compilationService.getListByPublic(pinned, pageRequest);
     }
 

@@ -20,13 +20,13 @@ public class Stat {
     @Column(name = "id")
     private Long id;
 
-    @Column(name = "app", nullable = false)
+    @Column(name = "app", length = 256, nullable = false)
     private String app;
 
-    @Column(name = "uri", nullable = false)
+    @Column(name = "uri", length = 3000, nullable = false)
     private String uri;
 
-    @Column(name = "ip", nullable = false)
+    @Column(name = "ip", length = 256, nullable = false)
     private String ip;
 
     @Column(name = "date_create", nullable = false)

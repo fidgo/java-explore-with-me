@@ -57,11 +57,13 @@ public class StatClient {
             Long idFromUri = Long.parseLong(StringUtils.getDigits(viewStat.getUri()));
             eventViews.put(idFromUri, viewStat.getHits());
         });
+
         return eventViews;
     }
 
     private String encodeDateTime(LocalDateTime date) {
         String value = date.toString().replace("T", " ");
+
         return URLEncoder.encode(value, StandardCharsets.UTF_8);
     }
 

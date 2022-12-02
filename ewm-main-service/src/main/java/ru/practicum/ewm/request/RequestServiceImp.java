@@ -16,6 +16,7 @@ import ru.practicum.ewm.user.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -28,8 +29,8 @@ public class RequestServiceImp implements RequestService {
     @Override
     @Transactional
     public ParticipationRequestDto createByPrivate(Long userId, Long eventId) {
-        checkArgumentAndIfNullThrowException(eventId, "eventId");
-        checkArgumentAndIfNullThrowException(userId, "userId");
+        throwIfTitleNotValid(eventId, "eventId");
+        throwIfTitleNotValid(userId, "userId");
 
         User userById = userRepository.findById(userId)
                 .orElseThrow(() -> new NoSuchElemException("User doesn't exist with id=" + userId));
@@ -66,15 +67,14 @@ public class RequestServiceImp implements RequestService {
             newRequest.setStatus(StateRequest.REJECTED);
         }
 
-        Request save = requestRepository.save(newRequest);
-        return RequestMapper.toParticipationRequestDto(save);
+        return RequestMapper.toParticipationRequestDto(requestRepository.save(newRequest));
     }
 
     @Override
     @Transactional
     public ParticipationRequestDto cancelByPrivate(Long userId, Long requestId) {
-        checkArgumentAndIfNullThrowException(requestId, "requestId");
-        checkArgumentAndIfNullThrowException(userId, "userId");
+        throwIfTitleNotValid(requestId, "requestId");
+        throwIfTitleNotValid(userId, "userId");
 
         userRepository.findById(userId)
                 .orElseThrow(() -> new NoSuchElemException("User doesn't exist with id=" + userId));
@@ -88,24 +88,27 @@ public class RequestServiceImp implements RequestService {
         }
 
         requestById.setStatus(StateRequest.CANCELED);
+
         return RequestMapper.toParticipationRequestDto(requestById);
     }
 
     @Override
     public List<ParticipationRequestDto> getListByPrivate(Long userId) {
-        checkArgumentAndIfNullThrowException(userId, "userId");
+        throwIfTitleNotValid(userId, "userId");
 
         userRepository.findById(userId)
                 .orElseThrow(() -> new NoSuchElemException("User doesn't exist with id=" + userId));
 
-        List<Request> requests = requestRepository.findAllByRequester_Id(userId);
-        return RequestMapper.toParticipationRequestDtos(requests);
+        return requestRepository.findAllByRequester_Id(userId)
+                .stream()
+                .map(RequestMapper::toParticipationRequestDto)
+                .collect(Collectors.toList());
     }
 
     @Override
     public List<ParticipationRequestDto> getListToEventFromCreatorByPrivate(Long userId, Long eventId) {
-        checkArgumentAndIfNullThrowException(userId, "userId");
-        checkArgumentAndIfNullThrowException(eventId, "eventId");
+        throwIfTitleNotValid(userId, "userId");
+        throwIfTitleNotValid(eventId, "eventId");
 
         userRepository.findById(userId)
                 .orElseThrow(() -> new NoSuchElemException("User doesn't exist with id=" + userId));
@@ -119,16 +122,18 @@ public class RequestServiceImp implements RequestService {
                     + userId + ")!");
         }
 
-        List<Request> requestsFromEvent = requestRepository.findAllByEvent_Id(eventId);
-        return RequestMapper.toParticipationRequestDtos(requestsFromEvent);
+        return requestRepository.findAllByEvent_Id(eventId)
+                .stream()
+                .map(RequestMapper::toParticipationRequestDto)
+                .collect(Collectors.toList());
     }
 
     @Override
     @Transactional
     public ParticipationRequestDto confirmByPrivate(Long userId, Long eventId, Long requestId) {
-        checkArgumentAndIfNullThrowException(userId, "userId");
-        checkArgumentAndIfNullThrowException(eventId, "eventId");
-        checkArgumentAndIfNullThrowException(requestId, "requestId");
+        throwIfTitleNotValid(userId, "userId");
+        throwIfTitleNotValid(eventId, "eventId");
+        throwIfTitleNotValid(requestId, "requestId");
 
         userRepository.findById(userId)
                 .orElseThrow(() -> new NoSuchElemException("User doesn't exist with id=" + userId));
@@ -170,9 +175,9 @@ public class RequestServiceImp implements RequestService {
     @Override
     @Transactional
     public ParticipationRequestDto rejectByPrivate(Long userId, Long eventId, Long requestId) {
-        checkArgumentAndIfNullThrowException(userId, "userId");
-        checkArgumentAndIfNullThrowException(eventId, "eventId");
-        checkArgumentAndIfNullThrowException(requestId, "requestId");
+        throwIfTitleNotValid(userId, "userId");
+        throwIfTitleNotValid(eventId, "eventId");
+        throwIfTitleNotValid(requestId, "requestId");
 
         userRepository.findById(userId)
                 .orElseThrow(() -> new NoSuchElemException("User doesn't exist with id=" + userId));
@@ -185,10 +190,11 @@ public class RequestServiceImp implements RequestService {
                 .orElseThrow(() -> new NoSuchElemException("Request doesn't exist with id=" + requestId));
 
         requestById.setStatus(StateRequest.REJECTED);
+
         return RequestMapper.toParticipationRequestDto(requestById);
     }
 
-    private void checkArgumentAndIfNullThrowException(Object variable, String title) {
+    private void throwIfTitleNotValid(Object variable, String title) {
         if (variable == null) {
             throw new IlLegalArgumentException(title + "is null");
         }

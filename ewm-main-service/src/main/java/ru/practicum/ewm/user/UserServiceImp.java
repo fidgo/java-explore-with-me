@@ -11,6 +11,7 @@ import ru.practicum.ewm.user.dto.UserMapper;
 import ru.practicum.ewm.util.PageRequestFrom;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,25 +28,28 @@ public class UserServiceImp implements UserService {
         }
 
         User inputUser = UserMapper.toUser(newUserRequestDto);
-        User save = userRepository.save(inputUser);
-        return UserMapper.toUserDto(save);
+
+        return UserMapper.toUserDto(userRepository.save(inputUser));
     }
 
     @Override
     public List<UserDto> getByAdmin(List<Long> ids, PageRequestFrom pageRequest) {
-        checkArgumentAndIfNullThrowException(ids, "ids");
-        List<User> usersByIds = userRepository.findAllByIdIn(ids, pageRequest);
-        return UserMapper.toListUserDto(usersByIds);
+        throwIfTitleNotValid(ids, "ids");
+
+        return userRepository.findAllByIdIn(ids, pageRequest)
+                .stream()
+                .map(UserMapper::toUserDto)
+                .collect(Collectors.toList());
     }
 
     @Override
     @Transactional
     public void deleteByAdmin(Long userId) {
-        checkArgumentAndIfNullThrowException(userId, "userId");
+        throwIfTitleNotValid(userId, "userId");
         userRepository.deleteById(userId);
     }
 
-    private void checkArgumentAndIfNullThrowException(Object variable, String title) {
+    private void throwIfTitleNotValid(Object variable, String title) {
         if (variable == null) {
             throw new IlLegalArgumentException(title + "is null");
         }
