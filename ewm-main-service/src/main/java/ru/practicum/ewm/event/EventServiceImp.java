@@ -266,7 +266,7 @@ public class EventServiceImp implements EventService {
         List<Long> idsEventsFromSpec = eventsFromSpec.stream().map(Event::getId).collect(Collectors.toList());
 
         return requestRepository
-                .getListEventIdsToCountedRequestsWithStatus(idsEventsFromSpec, StateRequest.CONFIRMED)
+                .getListEventIdsToCountedRequestsWithStatus(idsEventsFromSpec, StateRequest.CONFIRMED.toString())
                 .stream()
                 .collect(Collectors
                         .toMap(IdEventToCountRequests::getIdEvent, IdEventToCountRequests::getCountStatusRequests,

@@ -16,7 +16,7 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
 
     @Query(value = "SELECT r.event_id AS idEvent, COUNT(r.event_id) AS countStatusRequests "
             + "FROM requests AS r WHERE r.event_id IN (?1) AND r.status = ?2 GROUP BY r.event_id", nativeQuery = true)
-    List<IdEventToCountRequests> getListEventIdsToCountedRequestsWithStatus(List<Long> ids, StateRequest status);
+    List<IdEventToCountRequests> getListEventIdsToCountedRequestsWithStatus(List<Long> ids, String status);
 
     List<Request> findAllByEvent_Id(long eventId);
 
