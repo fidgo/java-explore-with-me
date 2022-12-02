@@ -268,11 +268,10 @@ public class EventServiceImp implements EventService {
         return requestRepository
                 .getListEventIdsToCountedRequestsWithStatus(idsEventsFromSpec, StateRequest.CONFIRMED)
                 .stream()
-                .collect(
-                        Collectors.
-                                toMap(IdEventToCountRequests::getIdEvent, IdEventToCountRequests::getCountStatusRequests,
-                                        (oldValue, newValue) -> oldValue
-                                ));
+                .collect(Collectors
+                        .toMap(IdEventToCountRequests::getIdEvent, IdEventToCountRequests::getCountStatusRequests,
+                                (oldValue, newValue) -> oldValue
+                        ));
     }
 
     private Specification<Event> prepareFilterSpecification(String text, List<Long> categories, Boolean paid,
