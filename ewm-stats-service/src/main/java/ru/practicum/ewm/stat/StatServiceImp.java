@@ -1,7 +1,6 @@
 package ru.practicum.ewm.stat;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.stat.dto.EndPointHit;
@@ -19,7 +18,6 @@ import static java.net.URLDecoder.decode;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class StatServiceImp implements StatService {
     private final StatRepository statRepository;
 
@@ -40,16 +38,10 @@ public class StatServiceImp implements StatService {
         LocalDateTime startTime = null;
         LocalDateTime endTime = null;
         try {
-            String startUTF8 = toUTF8(start);
-            String endUTF8 = toUTF8(end);
-
-            log.info("trying to parse start:{} from:{}", start, startUTF8);
-            log.info("trying to parse end:{} from:{}", end, endUTF8);
-
             startTime = LocalDateTime.parse(toUTF8(start), DateTimeFormat.formatter);
             endTime = LocalDateTime.parse(toUTF8(end), DateTimeFormat.formatter);
         } catch (Throwable th) {
-            throw new RuntimeException("problem with dencoding now!!!!");
+            throw new RuntimeException("Can't encode or parse correctly" + start + " and" + end);
         }
 
         if (unique) {
