@@ -8,7 +8,7 @@ import ru.practicum.ewm.stat.dto.StatMapper;
 import ru.practicum.ewm.stat.dto.ViewStats;
 import ru.practicum.ewm.util.DateTimeFormat;
 
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,14 +35,8 @@ public class StatServiceImp implements StatService {
     public List<ViewStats> get(String start, String end, Set<String> uris, Boolean unique) {
         List<ViewStats> viewStats;
 
-        LocalDateTime startTime = null;
-        LocalDateTime endTime = null;
-        try {
-            startTime = LocalDateTime.parse(toUTF8(start), DateTimeFormat.formatter);
-            endTime = LocalDateTime.parse(toUTF8(end), DateTimeFormat.formatter);
-        } catch (Throwable th) {
-            throw new RuntimeException("Can't encode or parse correctly" + start + " and" + end);
-        }
+        LocalDateTime startTime = LocalDateTime.parse(toUTF8(start), DateTimeFormat.formatter);
+        LocalDateTime endTime = LocalDateTime.parse(toUTF8(end), DateTimeFormat.formatter);
 
         if (unique) {
             viewStats = getUnique(uris, startTime, endTime);
@@ -77,7 +71,7 @@ public class StatServiceImp implements StatService {
         return viewStats;
     }
 
-    private String toUTF8(String encoded) throws UnsupportedEncodingException {
-        return decode(encoded, "UTF-8");
+    private String toUTF8(String encoded) {
+        return decode(encoded, StandardCharsets.UTF_8);
     }
 }
