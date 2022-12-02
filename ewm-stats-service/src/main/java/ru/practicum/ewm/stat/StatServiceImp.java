@@ -1,6 +1,7 @@
 package ru.practicum.ewm.stat;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.stat.dto.EndPointHit;
@@ -8,6 +9,7 @@ import ru.practicum.ewm.stat.dto.StatMapper;
 import ru.practicum.ewm.stat.dto.ViewStats;
 import ru.practicum.ewm.util.DateTimeFormat;
 
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -18,6 +20,7 @@ import static java.net.URLDecoder.decode;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class StatServiceImp implements StatService {
     private final StatRepository statRepository;
 
@@ -35,8 +38,20 @@ public class StatServiceImp implements StatService {
     public List<ViewStats> get(String start, String end, Set<String> uris, Boolean unique) {
         List<ViewStats> viewStats;
 
-        LocalDateTime startTime = LocalDateTime.parse(toUTF8(start), DateTimeFormat.formatter);
-        LocalDateTime endTime = LocalDateTime.parse(toUTF8(end), DateTimeFormat.formatter);
+        LocalDateTime startTime = null;
+        LocalDateTime endTime = null;
+        try {
+            String startUTF8 = toUTF8(start);
+            String endUTF8 = toUTF8(end);
+
+            log.info("trying to parse start:{} from:{}", start, startUTF8);
+            log.info("trying to parse end:{} from:{}", end, endUTF8);
+
+            startTime = LocalDateTime.parse(toUTF8(start), DateTimeFormat.formatter);
+            endTime = LocalDateTime.parse(toUTF8(end), DateTimeFormat.formatter);
+        } catch (Throwable th) {
+            throw new RuntimeException("problem with dencoding now!!!!");
+        }
 
         if (unique) {
             viewStats = getUnique(uris, startTime, endTime);
@@ -71,7 +86,7 @@ public class StatServiceImp implements StatService {
         return viewStats;
     }
 
-    private String toUTF8(String encoded) {
-        return decode(encoded, StandardCharsets.UTF_8);
+    private String toUTF8(String encoded) throws UnsupportedEncodingException {
+        return decode(encoded, "UTF-8");
     }
 }
