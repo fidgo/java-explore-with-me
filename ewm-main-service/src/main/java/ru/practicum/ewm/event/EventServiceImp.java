@@ -248,7 +248,7 @@ public class EventServiceImp implements EventService {
 
         List<Event> eventsFromSpec = eventRepository.findAll(specification, pageRequest);
         Map<Long, Long> views = statClient.getViewsForEvents(eventsFromSpec, false);
-        Map<Long, Integer> idEventToCountedRequests = getCountedConfirmedRequestsOnEvents(eventsFromSpec);
+        //Map<Long, Integer> idEventToCountedRequests = getCountedConfirmedRequestsOnEvents(eventsFromSpec);
 
         List<EventShortDto> dtos = eventsFromSpec.stream()
                 .map(EventMapper::toEventShortDto)
@@ -256,7 +256,7 @@ public class EventServiceImp implements EventService {
 
         dtos.forEach((dto) -> {
             dto.setViews(views.get(dto.getId()));
-            dto.setConfirmedRequests(idEventToCountedRequests.get(dto.getId()));
+            //dto.setConfirmedRequests(idEventToCountedRequests.get(dto.getId()));
         });
 
         return dtos;
