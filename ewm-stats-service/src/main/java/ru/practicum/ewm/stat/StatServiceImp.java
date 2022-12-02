@@ -10,7 +10,6 @@ import ru.practicum.ewm.stat.dto.ViewStats;
 import ru.practicum.ewm.util.DateTimeFormat;
 
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
