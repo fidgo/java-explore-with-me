@@ -24,6 +24,12 @@
 - 4.2.Структура проекта
 - 5.Обработка исключений
 - 6.Feature
+- 6.1.Описание
+- 6.2.ERM комментариев
+- 6.3.Роль сущности комментариев
+- 6.4.Эндпоинты
+- 6.5.Dto
+- 6.6.Описание шаблона демо
 - 7.Общий план разработки
 - 8.Приложение. Основной сервис. Эндпоинты
 - 9.Приложение. Сервис статистики. Эндпоинты
@@ -139,6 +145,9 @@ volumes:
 * `events` характеризует события.
 * `compilation_event` характеризует связь подборки событий с событиями.
 * `requests` характеризует заявки на участия в событиях.
+* `comments` характеризует оставленные пользователями комментарии у события. Подробнее см п.6.
+* `users_permission_policy` характеризует права пользователей на оставление комментариев и их
+пре-модерацию. Подробнее см п.6
 
 ### 3.2. Уровни доступа
 API основного сервиса можно разделить на три части. Первая — публичная(**Public**), доступна без регистрации любому
@@ -181,8 +190,8 @@ API основного сервиса можно разделить на три 
 ### 3.4.1. User
 Сущность **User** (пользователь) может быть создана, изменена, удалена
 и получена на уровне **Admin**.
-Для создание и изменения этой сущности необходимо уникальное **name** (имя) и уникальное **email** (почта)
-Учавствует в сущностях **Event**(событие), **Request** (заявка на участие в событии),
+Для создания и изменения этой сущности необходимо уникальное **name** (имя) и уникальное **email** (почта)
+Участвует в сущностях **Event**(событие), **Request** (заявка на участие в событии),
 в userId на уровне Private Api. 
 
 ### 3.4.2. Event
@@ -210,7 +219,7 @@ public enum StateEvent {
 
 Отменить событие на уровне **Private** можно только, если **state** будет ```StateEvent.PENDING```.
 
-**Event** на уровне **Admin** может быть получено, отредактированно и 
+**Event** на уровне **Admin** может быть получено, отредактированною и 
 пре-модерировано(отлконено ли событие или опубликовано).
 Событие отлоклонено, если **state** станет ```StateEvent.CANCELED```.
 Событие опубликованно, если **state** станет ```StateEvent.PUBLISHED```.
@@ -225,12 +234,12 @@ public enum StateEvent {
 
 У **Event** поле **request_moderation** отвечает за необходимость модерации заявок. Если **true**,
 то любая заявка на участие **Request** в конкретном событии **Event** должна быть одобрена на уровне **Private** 
-с тем userId, который соотвествует создателю конкретного события **Event**. Иначе, любая заявка будет 
+с тем userId, который соответствует создателю конкретного события **Event**. Иначе, любая заявка будет 
 автоматически принята(если заявка принята, то пользователю разрешается посетить событие). При условии,
 если имеется количество мест в **participant_limit** или количество мест неограниченно.
 
 ### 3.4.3. Request
-Чтобы попасть на события, нужно подать заявку и дождаться когда заявку потвердят.
+Чтобы попасть на события, нужно подать заявку и дождаться когда заявку подтвердят.
 Пользователи создают заявки на участи в конкретном событии.
 
 **Request** содержит в себе указание на событие **Event**, на которое подается заявка.
@@ -274,7 +283,7 @@ public enum StateRequest {
 то ВСЕ неподтверждённые заявки(```StateRequest.PENDING```) необходимо отклонить.
 
 ### 3.4.4. Compilation
-Удобно группировать события **Event** по определенным  характеристикам 
+Удобно группировать события **Event** по определенным характеристикам 
 в различные множества(подборки событий), причем с возможностью закреплений на страницы. 
 Например, по наибольшему числу просмотренных событий.
 Причем каждому событию **Event** может располагаться в нескольких подборок.
@@ -463,7 +472,7 @@ public class ErrorHandler {
 посетили ли его или нет.
 
 Каждый пользователь может оставить множество комментариев к событию,
-Конкретный комментарий может быть оставлен только одним конкретным пользователем.
+конкретный комментарий может быть оставлен только одним конкретным пользователем.
 
 Комментарии от некоторых пользователей должны модерироваться администратором.
 Одни пользователи могут писать комментарии с модерацией, другие без модерации, а некоторые
@@ -473,47 +482,294 @@ public class ErrorHandler {
 
 У пользователя должна быть возможность отредактировать оставленные комментарии.
 
+У администраторов должна быть возможность удаления и модификация комментариев,
+а также возможность банить пользователей или ограничивать пользователей к публикации
+комментариев, нарушающие установленные правила общения. 
+
+
 ### 6.2. ERM комментариев
 
+У **users_permission_policy**:
+* ```id``` — id записи;
+* ```user_id``` — id пользователя(**User**);
+* ```state``` — **StateSecurity**.
 
-Сущности:
+(user_id) - уникальное значение.
 
+Сущность связанная с **User**, отвечающая за статус оставленных комментариев.
+Если на уровне **Admin** потребовалось некоторому пользователю
+поменять **users_permission_policy.state**, то это пользователь заносится в эту таблицу. 
 
 У комментария имеется:
-* ```id``` — id комментария
+* ```id``` — id комментария;
 * ```creator_id``` — id создателя(**User**) комментария;
 * ```event_id``` — id события(**Event**);
-* ```text``` — текст комментария
+* ```text``` — текст комментария;
 * ```created``` — дата и время создания комментария;
-* ```state``` — опубликовано или нет;
+* ```state``` — опубликовано или нет.
 
 ### 6.3. Роль сущности комментариев
 
-***Comment*** (комментарий) создается на уровне ***Private** 
+**Comment** (комментарий) создается, модифицируется, удаляется, просматривается на уровне ***Private**.
+
+**Comment** просматривается, модифицируется, удаляется, отклоняется от публикации на уровне **Admin**.
+
+**Comment** просматривается на уровне **Public**.
+
+```java
+public enum StatusComment {
+    PENDING, PUBLISHED, REJECT
+}
+```
+
+Статус **StatusComment.PENDING** означает в ожидании модерации. По умолчанию каждый созданный
+комментария принимает такой статус, а потом он может измениться после проверки
+**users_permission_policy** у пользователя. Такой комментарий виден только на уровне **Private**
+самим создателем комментария и на уровне **Admin** администратором.
+
+Статус комментария **StatusComment.PUBLISHED** означает видимость этого комментария на уровне **Public**.
+
+Статус **StatusComment.REJECT** означает, что комментарий был отклонен на уровне **Admin**,
+либо пользователь был забанен(любой его коммент будет со статусом **StatusComment.REJECT**)
+
+```java
+public enum StateSecurity {
+    FREE, LIMITED, BANNED
+}
+```
+
+Каждый **User** с точки зрения уровня **Admin** :
+* ```FREE``` — имеющий право оставлять комментарий без модерации (по-умолчанию для любого пользователя)
+* ```LIMITED``` — имеющий право оставлять комментарий c предварительной модерации
+* ```BANNED``` — запрещено оставлять комментарии. При создании комментария автоматически присваевается 
+статус **StatusComment.REJECT**. Более того, как только ***Admin** установит у пользователя
+статус **StateSecurity.BANNED**, то все его комментарии должны стать **StatusComment.REJECT** .
+
+Если в таблице **users_permission_policy** нет пользователя, то статус этого пользователя
+принимается за **StateSecurity.FREE**, а если имеется, то берется тот **StateSecurity**, что в таблице находится.
+
+Статус у пользователя **StateSecurity.FREE** означает, что созданный пользователем комментарий
+автоматический будет иметь статус **StatusComment.PUBLISHED**.
+
+Статус у пользователя **StateSecurity.LIMITED** означает, что прежде чем комментарий пользователя 
+будет опубликован **StatusComment.PUBLISHED**, необходимо на уровне **Admin** разрешить публикацию.
+Если пользователь с **StateSecurity.LIMITED** отредактирует свой комментарий, которое был **StatusComment.PUBLISHED**,
+то статус комментария станет **StatusComment.PENDING**.
+
+Статус у пользователя **StateSecurity.BANNED** означает, что созданный пользователем комментарий 
+автоматически будет иметь статус **StatusComment.PUBLISHED.REJECT**.
+В случае если пользователь получил **StateSecurity.BANNED**, то все комментарии со статусами
+**StatusComment.PENDING** и **StatusComment.PUBLISHED** перейдут в разряд **StatusComment.REJECTED**.
+Обратный переход пользователя в **StateSecurity.FREE** или **StateSecurity.LIMITED** не изменят
+статусов оставленных комментарий.
+
+Если же комментарий c **StatusComment.PUBLISHED** и **StateSecurity.LIMITED**  будет отредактирован,
+то статус **StatusComment.PUBLISHED** перейдет в **StatusComment.PENDING**.
 
 ### 6.4. Эндпоинты
 
-Public:
-- GET /comments/{eventId} Получаем все отсортированные комментарии
-c паджинации по умолчанию size 10, сортировка по дате создания sort=asc/desc
+**Public:**
+- GET /comments/{eventId} Получаем все отсортированные комментарии у конкретного события
+c паджинации по умолчанию size 10, сортировка по дате создания sort=asc/desc.
 
-
-Private:
-
-- POST /users/{userId}/events/{eventId}/comments 
-- PATCH /users/{userId}/comments/{commentId} Изменяем текст комментария
+**Private:**
+- POST /users/{userId}/comments/events/{eventId}/ Создание комментария пользователем userId на событие eventId;
+- PATCH /users/{userId}/comments/{commentId} Изменяем текст комментария текущего пользователя;
 - GET /users/{userId}/comments Получаем все комментарии написанные текущим пользователем
-с паджинация по умолчанию 10, сортировки по дате создания sort asc/desc 
-- GET /users/{userId}/comments/{commentId} Получаем 
+с паджинация по умолчанию 10, сортировки по дате создания sort asc/desc ;
+- GET /users/{userId}/comments/{commentId} Получаем более подробную информацию комментарии текущего пользователя;
+- DELETE /users/{userId}/comments/{commentId} Удаляем комментарии текущего пользователя.
 
+**Admin:**
+- PATCH /admin/users/{userId}/{state} Установка конкретному пользователю право публиковать, непубликовать,
+модерировать;
 
-Admin:
+- PATCH /admin/comments/{commentId} редактировать комментарий;
+- PATCH /admin/comments/{commentId}/publish Опубликовать комментарий;
+- PATCH /admin/comments/{commentId}/reject Отказать в публикации комментарий;
 
+- GET /admin/comments/events/{eventId} Вывод всех комментариев со статусом state и eventId если есть, с паджинации
+по умолчанию size 10 и сортировкой по дате создания sort asc/desc;
+- GET /admin/comments/{commentId} Вывод конкретного комментария;
+- DELETE /admin/comments/{commentId} Удаление комментария.
+- DELETE /admin/comments/events/{eventId} Удаление всех комментариев со статусом state у события
+- DELETE /admin/comments/rejected Удаление всех комментариев со статусом REJECT
 
 ### 6.5. Dto
 
+**CommentDto**
 
--
+<details>
+<summary>Развернуть код</summary>
+
+```java
+
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@ToString
+public class CommentDto {
+    private Long id;
+    private UserShortDto commentator;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime created;
+    private StatusComment statusComment;
+    private String text;
+    private EventSmallDto event;
+
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @ToString
+    public static class EventSmallDto {
+        private String annotation;
+
+        private String eventDate;
+
+        private Long id;
+
+        private UserShortDto initiator;
+
+    }
+}
+```
+
+</details>
+
+**CommentPublicDto**
+
+<details>
+<summary>Развернуть код</summary>
+
+```java
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@ToString
+public class CommentPublicDto {
+    private Long id;
+    private UserShortDto commentator;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime created;
+    private String text;
+    private EventSmallDto event;
+
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @ToString
+    public static class EventSmallDto {
+        private String annotation;
+
+        private String eventDate;
+
+        private Long id;
+
+        private UserShortDto initiator;
+
+    }
+}
+
+```
+
+</details>
+
+**NewCommentDto**
+
+<details>
+<summary>Развернуть код</summary>
+
+```java
+
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@ToString
+public class NewCommentDto {
+
+    @NotEmpty(groups = {Create.class})
+    @Size(max = 5000, groups = {Create.class})
+    private String text;
+}
+
+
+```
+
+</details>
+
+### 6.6. Описание шаблона демо
+
+<details>
+<summary>Развернуть шаги</summary>
+
+
+- Создается пользователь User1 (userId == 1)
+- Создается пользователь User2 (userId == 2)
+- Создается пользователь User3 (userId == 3)
+- Создается событие Event1 (eventId == 1) связанное с User1
+- Вывод созданных событий: Event1
+- Вывод созданных пользователей: User1, User2, User3. У всех StateSecurity должна равняться null
+- Установить User1 **StateSecurity.FREE**
+- Установить User2 **StateSecurity.LIMITED**
+- Установить User3 **StateSecurity.BANNED**
+- Вывод созданных пользователей: User1, User2, User3. У всех StateSecurity должна равняться соответствующей
+выставленным раннее значениям
+
+
+- User1 создает Comment1 (commentId == 1) к Event1
+- User2 создает Comment2 (commentId == 2) к Event1
+- User2 создает Comment3 (commentId == 3) к Event1
+- User3 создает Comment3 (commentId == 4) к Event1
+- Вывод комментариев Public к Event1
+- Вывод комментариев Private (userId = 2)
+- Вывод комментария Private (userId = 3) Comment4 к Event1
+- Вывод комментарий с некорректным id=100, Private (userId = 3). Ожидаем исключение.
+- Вывод комментариев Admin на Event1 со статусом ALL
+- Вывод комментариев Admin на Event1 со статусом PENDING
+- Вывод комментариев Admin на Event1 со статусом PUBLISHED
+- Вывод комментариев Admin на Event1 со статусом REJECT
+
+
+- Admin редактирует Comment2
+- Вывод комментария Comment2 Admin
+- Admin принимает Comment2 к публикации
+- Вывод комментариев Public к Event1
+- Admin отклоняет Comment3
+- Вывод комментариев Admin на Event1 со статусом ALL
+- User2 редактирует Comment2
+- Вывод комментариев Public к Event1
+- Вывод комментариев Admin к Event1
+- User1 пытается модифицировать Comment2, но получает исключение, так как чужой комментарий
+
+
+- Admin принимает Comment2 к публикации
+- Admin смена статуса userId = 2 на BANNED
+- Вывод комментариев Admin на Event1 со статусом ALL
+- Admin удаление всех Reject
+- Вывод комментариев Admin на Event1 со статусом ALL
+- Admin удаление Comment1
+- Вывод комментариев Admin к Event1 со статусом ALL
+- User1 создание коммента к Event1
+- User1 создание коммента к Event1
+- User1 создание коммента к Event1
+- Вывод комментариев Admin к Event1 со статусом ALL
+- Admin Удаление всех комментариев к Event1
+- Вывод комментариев Admin к Event1 со статусом ALL
+- User1 создание коммента к Event1
+- User1 удаление этого же коммента
+
+</details>
+
+
 
 ## 7. Общий план разработки
 - [X] **Проектирование и подготовка к запуску многомодульного проекта.**
@@ -526,7 +782,7 @@ Admin:
 - [X] **Реализация функционала запросов участия в событиях.**
 - [X] **Доработка клиента статистики.**
 - [X] **Добавление учета статистики.**
-- [ ] **Реализация выбранной дополнительной фичи.**
+- [X] **Реализация выбранной дополнительной фичи.**
 
 ## 8. Приложение. Основной сервис. Эндпоинты
 

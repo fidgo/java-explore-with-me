@@ -14,5 +14,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
             " u.name = :name OR u.email = :email")
     boolean existsByNameOrByEmail(@Param("name") String name, @Param("email") String email);
 
+
     List<User> findAllByIdIn(List<Long> ids, Pageable pageable);
 }
