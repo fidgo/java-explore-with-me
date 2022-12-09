@@ -230,6 +230,8 @@ public class CommentServiceImp implements CommentService {
             inputComment.setStatus(StatusComment.PENDING);
         }
 
+        inputComment.setText(newCommentDto.getText());
+
         return CommentMapper.toCommentDto(inputComment);
     }
 

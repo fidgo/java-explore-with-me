@@ -569,31 +569,31 @@ public enum StateSecurity {
 ### 6.4. Эндпоинты
 
 **Public:**
-- GET /comments/{eventId} Получаем все отсортированные комментарии у конкретного события
+- **GET /comments/{eventId}** Получаем все отсортированные комментарии у конкретного события
 c паджинации по умолчанию size 10, сортировка по дате создания sort=asc/desc.
 
 **Private:**
-- POST /users/{userId}/comments/events/{eventId}/ Создание комментария пользователем userId на событие eventId;
-- PATCH /users/{userId}/comments/{commentId} Изменяем текст комментария текущего пользователя;
-- GET /users/{userId}/comments Получаем все комментарии написанные текущим пользователем
+- **POST /users/{userId}/comments/events/{eventId}/** Создание комментария пользователем userId на событие eventId;
+- **PATCH /users/{userId}/comments/{commentId}** Изменяем текст комментария текущего пользователя;
+- **GET /users/{userId}/comments** Получаем все комментарии написанные текущим пользователем
 с паджинация по умолчанию 10, сортировки по дате создания sort asc/desc ;
-- GET /users/{userId}/comments/{commentId} Получаем более подробную информацию комментарии текущего пользователя;
-- DELETE /users/{userId}/comments/{commentId} Удаляем комментарии текущего пользователя.
+- **GET /users/{userId}/comments/{commentId}** Получаем более подробную информацию комментарии текущего пользователя;
+- **DELETE /users/{userId}/comments/{commentId}** Удаляем комментарии текущего пользователя.
 
 **Admin:**
-- PATCH /admin/users/{userId}/{state} Установка конкретному пользователю право публиковать, непубликовать,
+- **PATCH /admin/users/{userId}/{state}** Установка конкретному пользователю право публиковать, непубликовать,
 модерировать;
 
-- PATCH /admin/comments/{commentId} редактировать комментарий;
-- PATCH /admin/comments/{commentId}/publish Опубликовать комментарий;
-- PATCH /admin/comments/{commentId}/reject Отказать в публикации комментарий;
+- **PATCH /admin/comments/{commentId}** редактировать комментарий;
+- **PATCH /admin/comments/{commentId}/publish** Опубликовать комментарий;
+- **PATCH /admin/comments/{commentId}/reject** Отказать в публикации комментарий;
 
-- GET /admin/comments/events/{eventId} Вывод всех комментариев со статусом state и eventId если есть, с паджинации
+- **GET /admin/comments/events/{eventId}** Вывод всех комментариев со статусом state и eventId если есть, с паджинации
 по умолчанию size 10 и сортировкой по дате создания sort asc/desc;
-- GET /admin/comments/{commentId} Вывод конкретного комментария;
-- DELETE /admin/comments/{commentId} Удаление комментария.
-- DELETE /admin/comments/events/{eventId} Удаление всех комментариев со статусом state у события
-- DELETE /admin/comments/rejected Удаление всех комментариев со статусом REJECT
+- **GET /admin/comments/{commentId}** Вывод конкретного комментария;
+- **DELETE /admin/comments/{commentId}** Удаление комментария.
+- **DELETE /admin/comments/events/{eventId}** Удаление всех комментариев со статусом state у события
+- **DELETE /admin/comments/rejected** Удаление всех комментариев со статусом REJECT
 
 ### 6.5. Dto
 
