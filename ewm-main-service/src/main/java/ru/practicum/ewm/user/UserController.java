@@ -7,6 +7,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.user.dto.NewUserRequestDto;
 import ru.practicum.ewm.user.dto.UserDto;
+import ru.practicum.ewm.user.permission.policy.StateSecurity;
 import ru.practicum.ewm.util.Create;
 import ru.practicum.ewm.util.PageRequestFrom;
 
@@ -29,6 +30,21 @@ public class UserController {
                 newUserRequestDto);
 
         return userService.createByAdmin(newUserRequestDto);
+    }
+
+    @PatchMapping("/admin/users/{userId}")
+    UserDto setSecurityStatusByAdmin(@PathVariable("userId") Long userId,
+                                     @RequestParam StateSecurity state,
+                                     HttpServletRequest request) {
+        log.info("{}:{}:{}#To set SecurityStatus:{} By Admin on user:{}",
+                this.getClass().getSimpleName(),
+                "setSecurityStatusByAdmin",
+                request.getRequestURI(),
+                state,
+                userId
+        );
+
+        return userService.setSecurityStatusByAdmin(userId, state);
     }
 
     @GetMapping("/admin/users")

@@ -44,6 +44,8 @@ services:
       - POSTGRES_USER=root
       - POSTGRES_PASSWORD=root
       - STATSERV_URL=http://ewm-stats:9090
+      - LOGGING_LEVEL_ORG_HIBERNATE_SQL=DEBUG
+      - LOGGING_LEVEL_ORG_HIBERNATE_TYPE_DESCRIPTOR_SQL_BASICBINDER=TRACE
     command:
       - p 8080
 
